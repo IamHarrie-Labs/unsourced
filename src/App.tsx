@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { useSurvey, type SurveyLedgerView } from "./hooks/useSurvey";
 import { SurveyPanel } from "./components/SurveyPanel";
+import { CreateSurvey } from "./components/CreateSurvey";
 import "./App.css";
 
-function App() {
-  const survey = useSurvey();
+// A link with ?survey=<address> is someone joining an existing survey.
+// No link means there's nothing to join yet — show the create flow instead.
+const params = new URLSearchParams(window.location.search);
+const SURVEY_FROM_LINK = params.get("survey") ?? undefined;
+const QUESTION_FROM_LINK = params.get("q") ?? undefined;
+
+function RespondView({ contractAddress, question }: { contractAddress: string; question?: string }) {
+  const survey = useSurvey(contractAddress);
   const [ledger, setLedger] = useState<SurveyLedgerView | null>(null);
 
   useEffect(() => {
@@ -16,22 +23,32 @@ function App() {
     return () => {
       cancelled = true;
     };
-    // Refetch after any call attempt settles — a "failed assert" error can
-    // still mean an earlier attempt actually landed on-chain, so the ledger
-    // needs re-reading on error too, not just on success.
+    // Refetch after any attempt settles — a rejected answer can still mean
+    // an earlier attempt actually landed, so re-read on error too.
   }, [survey.status, survey.lastResult, survey.error]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="app">
-      <main>
-        <SurveyPanel {...survey} ledger={ledger} />
-        <p className="network-note">
-          Network: {survey.networkId}
-          {survey.contractAddress ? ` · Contract: ${survey.contractAddress.slice(0, 12)}…` : " · No contract configured"}
-        </p>
-      </main>
-    </div>
+    <main>
+      <SurveyPanel {...survey} ledger={ledger} question={question} />
+      <p className="network-note">
+        Network: {survey.networkId}
+        {survey.contractAddress ? ` · Contract: ${survey.contractAddress.slice(0, 12)}…` : ""}
+      </p>
+    </main>
   );
+}
+
+function CreateView() {
+  const survey = useSurvey();
+  return (
+    <main>
+      <CreateSurvey {...survey} />
+    </main>
+  );
+}
+
+function App() {
+  return <div className="app">{SURVEY_FROM_LINK ? <RespondView contractAddress={SURVEY_FROM_LINK} question={QUESTION_FROM_LINK} /> : <CreateView />}</div>;
 }
 
 export default App;

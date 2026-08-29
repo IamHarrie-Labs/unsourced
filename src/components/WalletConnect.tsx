@@ -1,6 +1,6 @@
-import type { useMidnight } from "../hooks/useMidnight";
+import type { useSurvey } from "../hooks/useSurvey";
 
-type Props = Pick<ReturnType<typeof useMidnight>, "status" | "address" | "error" | "connect" | "disconnect">;
+type Props = Pick<ReturnType<typeof useSurvey>, "status" | "address" | "error" | "connect" | "disconnect">;
 
 function shorten(address: string): string {
   return address.length > 20 ? `${address.slice(0, 12)}…${address.slice(-6)}` : address;

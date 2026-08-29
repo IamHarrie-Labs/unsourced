@@ -1,55 +1,60 @@
-// Wallet connection + survey contract interaction. Self-contained, mirroring
-// useMidnight.ts's shape rather than sharing code with it — each level of
-// this project has stood on its own rather than reaching for a shared
-// abstraction that only one other file would use.
+// Wallet connection + survey contract interaction — both joining an
+// existing survey and deploying a brand new one from the browser. No CLI
+// step required: whoever creates a survey does it by clicking a button
+// here, using their own connected wallet to pay for the deploy.
 
 import { useCallback, useMemo, useState } from "react";
 import type { ConnectedAPI, InitialAPI } from "@midnight-ntwrk/dapp-connector-api";
 import { setNetworkId } from "@midnight-ntwrk/midnight-js-network-id";
-import { findDeployedContract } from "@midnight-ntwrk/midnight-js-contracts";
+import { deployContract, findDeployedContract } from "@midnight-ntwrk/midnight-js-contracts";
 import { httpClientProofProvider } from "@midnight-ntwrk/midnight-js-http-client-proof-provider";
 import { indexerPublicDataProvider } from "@midnight-ntwrk/midnight-js-indexer-public-data-provider";
 import { FetchZkConfigProvider } from "@midnight-ntwrk/midnight-js-fetch-zk-config-provider";
 import { CompiledContract } from "@midnight-ntwrk/midnight-js-protocol/compact-js";
-import { fromHex, toHex } from "@midnight-ntwrk/midnight-js-protocol/compact-runtime";
+import { fromHex, toHex, persistentHash, CompactTypeBytes, CompactTypeVector } from "@midnight-ntwrk/midnight-js-protocol/compact-runtime";
 import { Binding, Proof, SignatureEnabled, Transaction } from "@midnight-ntwrk/midnight-js-protocol/ledger";
 import satisfies from "semver/functions/satisfies.js";
 
 import * as SurveyContract from "../../managed/survey/contract/index.js";
 import { inMemoryPrivateStateProvider } from "../in-memory-private-state-provider";
 
+// Plain-language versions of what the contract's own asserts say. Someone
+// using this shouldn't need to know what an "assert" or a "circuit" is to
+// understand why a button didn't work.
 function humanizeError(raw: string): string {
   const assertMatch = raw.match(/failed assert:\s*(.+)$/);
   const message = assertMatch ? assertMatch[1].trim() : raw;
 
   if (message.includes("not on this survey's member list")) {
-    return "That key isn't on this survey's member list.";
+    return "That key doesn't belong to this survey.";
   }
   if (message.includes("already responded")) {
-    return "That key has already responded to this survey — one response per member.";
+    return "That key has already been used to answer this survey — one answer per person.";
   }
   if (raw.includes("disconnected from") || raw.includes("ECONNREFUSED")) {
-    return "Lost the connection mid-request. This is usually transient — try again.";
+    return "Lost the connection partway through. This usually clears up — try again.";
   }
   return message;
 }
 
-const NETWORK_ID = (import.meta.env.VITE_NETWORK_ID as string) || "preprod";
-const SURVEY_CONTRACT_ADDRESS = import.meta.env.VITE_SURVEY_CONTRACT_ADDRESS as string | undefined;
+const NETWORK_ID = (import.meta.env.VITE_NETWORK_ID as string) || "preview";
+const DEFAULT_CONTRACT_ADDRESS = import.meta.env.VITE_SURVEY_CONTRACT_ADDRESS as string | undefined;
 const PRIVATE_STATE_ID = "surveyPrivateState";
-const MEMBER_KEY_STORAGE_KEY = "unsourced:member-key";
-const RESPONDED_STORAGE_KEY = "unsourced:responded";
+const ROSTER_SIZE = 8;
 
 setNetworkId(NETWORK_ID as never);
 
-function getLocalMemberKey(): Uint8Array | null {
-  const stored = localStorage.getItem(MEMBER_KEY_STORAGE_KEY);
-  if (!stored) return null;
-  return new Uint8Array(stored.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+function memberKeyStorageKey(address: string): string {
+  return `unsourced:member-key:${address}`;
+}
+function respondedStorageKey(address: string): string {
+  return `unsourced:responded:${address}`;
 }
 
-function setLocalMemberKey(hex: string): void {
-  localStorage.setItem(MEMBER_KEY_STORAGE_KEY, hex.trim());
+function getLocalMemberKey(address: string): Uint8Array | null {
+  const stored = localStorage.getItem(memberKeyStorageKey(address));
+  if (!stored) return null;
+  return new Uint8Array(stored.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
 }
 
 const COMPATIBLE_API_VERSION = "4.x";
@@ -60,6 +65,12 @@ function findCompatibleWallet(): InitialAPI | undefined {
   return Object.values(injected).find(
     (wallet) => !!wallet && typeof wallet === "object" && "apiVersion" in wallet && satisfies(wallet.apiVersion, COMPATIBLE_API_VERSION),
   );
+}
+
+// Same hash shape the contract computes for `persistentHash<Vector<1, Bytes<32>>>([secretKey()])`.
+const COMMITMENT_DESCRIPTOR = new CompactTypeVector(1, new CompactTypeBytes(32));
+function commitmentOf(secretKey: Uint8Array): Uint8Array {
+  return persistentHash(COMMITMENT_DESCRIPTOR, [secretKey]);
 }
 
 export type SurveyOption = "respondA" | "respondB" | "respondC";
@@ -75,25 +86,34 @@ export interface SurveyLedgerView {
 
 type WalletStatus = "disconnected" | "connecting" | "connected" | "error";
 
-export function useSurvey() {
+export function useSurvey(initialContractAddress?: string) {
+  const [contractAddress, setContractAddress] = useState<string | undefined>(
+    initialContractAddress ?? DEFAULT_CONTRACT_ADDRESS,
+  );
   const [status, setStatus] = useState<WalletStatus>("disconnected");
   const [address, setAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connectedApi, setConnectedApi] = useState<ConnectedAPI | null>(null);
   const [busyOption, setBusyOption] = useState<SurveyOption | null>(null);
+  const [deploying, setDeploying] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
   const [memberKeyHex, setMemberKeyHex] = useState<string | null>(() => {
-    const key = getLocalMemberKey();
+    if (!contractAddress) return null;
+    const key = getLocalMemberKey(contractAddress);
     return key ? toHex(key) : null;
   });
   const [hasResponded, setHasResponded] = useState<boolean>(
-    () => localStorage.getItem(RESPONDED_STORAGE_KEY) === "true",
+    () => !!contractAddress && localStorage.getItem(respondedStorageKey(contractAddress)) === "true",
   );
 
-  const setMemberKey = useCallback((hex: string) => {
-    setLocalMemberKey(hex);
-    setMemberKeyHex(hex.trim());
-  }, []);
+  const setMemberKey = useCallback(
+    (hex: string) => {
+      if (!contractAddress) return;
+      localStorage.setItem(memberKeyStorageKey(contractAddress), hex.trim());
+      setMemberKeyHex(hex.trim());
+    },
+    [contractAddress],
+  );
 
   const connect = useCallback(async () => {
     setStatus("connecting");
@@ -168,13 +188,13 @@ export function useSurvey() {
 
   const respond = useCallback(
     async (option: SurveyOption) => {
-      if (!SURVEY_CONTRACT_ADDRESS) {
-        setError("No survey contract address configured. Set VITE_SURVEY_CONTRACT_ADDRESS.");
+      if (!contractAddress) {
+        setError("No survey to respond to.");
         return;
       }
-      const memberKey = getLocalMemberKey();
+      const memberKey = getLocalMemberKey(contractAddress);
       if (!memberKey) {
-        setError("Paste your member key first.");
+        setError("Enter your access key first.");
         return;
       }
       setBusyOption(option);
@@ -185,29 +205,29 @@ export function useSurvey() {
         const deployed = await findDeployedContract(providers as never, {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           compiledContract: compiledContract as any,
-          contractAddress: SURVEY_CONTRACT_ADDRESS,
+          contractAddress,
           privateStateId: PRIVATE_STATE_ID,
           initialPrivateState: { secretKey: memberKey },
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const tx = await (deployed.callTx as any)[option]();
-        setLastResult(`Submitted. Transaction id: ${tx.public.txId}`);
-        localStorage.setItem(RESPONDED_STORAGE_KEY, "true");
+        setLastResult(`Sent. Transaction id: ${tx.public.txId}`);
+        localStorage.setItem(respondedStorageKey(contractAddress), "true");
         setHasResponded(true);
       } catch (e) {
-        const raw = e instanceof Error ? e.message : `Failed to submit response`;
+        const raw = e instanceof Error ? e.message : `Failed to send your answer`;
         setError(humanizeError(raw));
       } finally {
         setBusyOption(null);
       }
     },
-    [compiledContract, getProviders],
+    [contractAddress, compiledContract, getProviders],
   );
 
   const readLedger = useCallback(async (): Promise<SurveyLedgerView | null> => {
-    if (!SURVEY_CONTRACT_ADDRESS) return null;
+    if (!contractAddress) return null;
     const providers = await getProviders();
-    const state = await providers.publicDataProvider.queryContractState(SURVEY_CONTRACT_ADDRESS);
+    const state = await providers.publicDataProvider.queryContractState(contractAddress);
     if (!state) return null;
     const ledgerState = SurveyContract.ledger(state.data);
     return {
@@ -218,13 +238,52 @@ export function useSurvey() {
       revealThreshold: ledgerState.revealThreshold,
       revealed: ledgerState.responseCount >= ledgerState.revealThreshold,
     };
-  }, [getProviders]);
+  }, [contractAddress, getProviders]);
+
+  // Deploys a brand new survey: generates a fresh access key for every
+  // member slot, hashes each one the same way the contract does, and
+  // deploys with those hashes baked in. The keys themselves never leave
+  // this browser except in the list handed back to the caller — nothing
+  // is sent anywhere but the 8 hashes.
+  const createSurvey = useCallback(
+    async (memberCount: number, revealThreshold: number): Promise<{ contractAddress: string; memberKeys: string[] } | null> => {
+      setDeploying(true);
+      setError(null);
+      try {
+        const providers = await getProviders();
+        const realKeys = Array.from({ length: memberCount }, () => crypto.getRandomValues(new Uint8Array(32)));
+        const paddingKeys = Array.from({ length: ROSTER_SIZE - memberCount }, () => crypto.getRandomValues(new Uint8Array(32)));
+        const allKeys = [...realKeys, ...paddingKeys];
+        const commitments = allKeys.map(commitmentOf);
+
+        const deployed = await deployContract(providers as never, {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          compiledContract: compiledContract as any,
+          args: [...commitments, BigInt(revealThreshold)],
+          privateStateId: PRIVATE_STATE_ID,
+          initialPrivateState: { secretKey: allKeys[0] },
+        });
+
+        const newAddress = deployed.deployTxData.public.contractAddress;
+        setContractAddress(newAddress);
+        return { contractAddress: newAddress, memberKeys: realKeys.map(toHex) };
+      } catch (e) {
+        const raw = e instanceof Error ? e.message : "Failed to create the survey";
+        setError(humanizeError(raw));
+        return null;
+      } finally {
+        setDeploying(false);
+      }
+    },
+    [compiledContract, getProviders],
+  );
 
   return {
     status,
     address,
     error,
     busyOption,
+    deploying,
     lastResult,
     memberKeyHex,
     hasResponded,
@@ -233,7 +292,8 @@ export function useSurvey() {
     disconnect,
     respond,
     readLedger,
-    contractAddress: SURVEY_CONTRACT_ADDRESS,
+    createSurvey,
+    contractAddress,
     networkId: NETWORK_ID,
   };
 }
