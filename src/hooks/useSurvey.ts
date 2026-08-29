@@ -37,8 +37,8 @@ function humanizeError(raw: string): string {
 const NETWORK_ID = (import.meta.env.VITE_NETWORK_ID as string) || "preprod";
 const SURVEY_CONTRACT_ADDRESS = import.meta.env.VITE_SURVEY_CONTRACT_ADDRESS as string | undefined;
 const PRIVATE_STATE_ID = "surveyPrivateState";
-const MEMBER_KEY_STORAGE_KEY = "guarded-counter:survey-member-key";
-const RESPONDED_STORAGE_KEY = "guarded-counter:survey-responded";
+const MEMBER_KEY_STORAGE_KEY = "unsourced:member-key";
+const RESPONDED_STORAGE_KEY = "unsourced:responded";
 
 setNetworkId(NETWORK_ID as never);
 

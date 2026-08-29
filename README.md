@@ -1,12 +1,12 @@
-# Anonymous Survey
+# Unsourced
 
-[![CI](https://github.com/IamHarrie-Labs/guarded-counter/actions/workflows/ci.yml/badge.svg)](https://github.com/IamHarrie-Labs/guarded-counter/actions/workflows/ci.yml)
+[![CI](https://github.com/IamHarrie-Labs/unsourced/actions/workflows/ci.yml/badge.svg)](https://github.com/IamHarrie-Labs/unsourced/actions/workflows/ci.yml)
 
 > A survey where every response is provably from an eligible member — and nobody, including whoever ran it, can tell which one.
 
 ## Live Demo
 
-https://guarded-counter.vercel.app
+Live demo link coming shortly — the contract below is already deployed and working, the frontend just needs a new home to deploy to.
 
 Connect Lace (set to the Preview network), paste in a member key from the roster, and submit a response. Each key works exactly once — try it again and the contract rejects it, same as it would for a stranger trying to guess their way onto the roster.
 
@@ -59,7 +59,7 @@ Midnight network, Compact, Midnight.js SDK, React + Vite, Lace wallet, Node.js v
 
 ```
 git clone <your repo url>
-cd guarded-counter
+cd unsourced
 npm install
 ```
 
