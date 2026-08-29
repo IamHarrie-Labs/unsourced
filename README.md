@@ -6,7 +6,7 @@
 
 ## Live Demo
 
-Live demo link coming shortly — the contract below is already deployed and working, the frontend just needs a new home to deploy to.
+https://unsourced.vercel.app
 
 Connect Lace (set to the Preview network), paste in a member key from the roster, and submit a response. Each key works exactly once — try it again and the contract rejects it, same as it would for a stranger trying to guess their way onto the roster.
 
