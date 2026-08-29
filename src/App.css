@@ -134,25 +134,6 @@ button:disabled {
   color: #6b6b78;
 }
 
-.tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.tab {
-  background: #17171d;
-  color: #9a9aa8;
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
-}
-
-.tab--active {
-  background: #6366f1;
-  color: white;
-}
-
 .survey-question {
   color: #c4c4d0;
   font-size: 0.95rem;

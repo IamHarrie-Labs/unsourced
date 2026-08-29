@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_NETWORK_ID: string;
-  readonly VITE_CONTRACT_ADDRESS?: string;
+  readonly VITE_SURVEY_CONTRACT_ADDRESS?: string;
 }
 
 interface ImportMeta {

@@ -21,7 +21,7 @@ Midnight is a fit because the product needs two properties that normally trade o
 1. **Verifiable participation.** Anyone can check that responses came from real, eligible members of the defined group, and that nobody submitted twice. This is a membership proof against a committed set, plus a nullifier published on chain so a second response from the same member is rejected.
 2. **Unlinkable responses.** The response is disclosed. The identity behind it never is, and no party, including the organiser and including the contract, ever holds both halves.
 
-That is exactly the shape of `disclose()` and private witnesses. The member's secret stays a witness on their own machine, the proof travels, and only the deliberately disclosed parts reach the ledger. The Level 1 to 3 guarded counter in this repo is a small version of the same pattern: a commitment goes public, the key behind it never does.
+That is exactly the shape of `disclose()` and private witnesses. The member's secret stays a witness on their own machine, the proof travels, and only the deliberately disclosed parts reach the ledger: a commitment goes public, the key behind it never does.
 
 Worth being precise about the limit. This gives Sybil resistance **within a defined group**, not proof of personhood on the open internet. If the link were open to anyone, one response per person would collapse into one response per wallet, and wallets are free. Gating to a roster is what makes the guarantee real, and organisers already have the roster.
 
@@ -44,7 +44,7 @@ The row that carries the product is the fourth one. The link between a member an
 
 **The cryptography is realistic.** Membership proofs against a committed set and nullifier based single use are well established patterns, and they are close to what is already compiling and deploying in this repo. Nothing here needs a novel circuit.
 
-**The honest risk is network availability, not contract complexity.** Preprod has been unreachable for me across many attempts over several days, hanging at wallet sync before ever reaching a deploy, which is why Levels 2 and 3 are deployed and demonstrated on Preview instead. Midnight's own forum notes Preprod is mid reset for mainnet preparation and intermittently unavailable. If that persists into Level 6, reaching Mainnet becomes a scheduling problem rather than an engineering one.
+**The honest risk is network availability, not contract complexity.** Preprod has been unreachable for me across many attempts over several weeks, hanging at wallet sync before ever reaching a deploy, which is why the contract is deployed and demonstrated on Preview instead. Midnight's own forum notes Preprod is mid reset for mainnet preparation and intermittently unavailable. If that persists into later levels, reaching Mainnet becomes a scheduling problem rather than an engineering one.
 
 **The second real constraint is wallet friction.** Every respondent needs a Lace wallet, which is a hard filter for a mainstream consumer survey audience. The realistic path to the Level 5 and 6 user targets is groups whose members already hold wallets, so the first cohorts are DAO and hackathon communities rather than classrooms. The classroom and workplace versions are the larger long term market, but they only open up once wallet onboarding gets easier.
 

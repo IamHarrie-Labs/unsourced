@@ -24,7 +24,7 @@ A survey with a fixed roster of 8 members, set once at deploy time. Each member 
 
 No individual response is ever stored. Submitting just increments one of three tally counters — "Going well," "Mixed," or "Needs work" — so there's nothing on the ledger to unlink a person from an answer, because the two were never linked in the first place.
 
-This is the Level 4 build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymous feedback tool for groups that already have a roster — teams, classes, DAOs — where the value isn't hiding from a stranger, it's hiding from the person who'll actually read the results.
+This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymous feedback tool for groups that already have a roster — teams, classes, DAOs — where the value isn't hiding from a stranger, it's hiding from the person who'll actually read the results.
 
 ## Privacy model
 
@@ -63,13 +63,13 @@ cd unsourced
 npm install
 ```
 
-Compile the contracts:
+Compile the contract:
 
 ```
 npm run compact
 ```
 
-This generates `managed/counter` and `managed/survey` with the compiled circuits and keys.
+This generates `managed/survey` with the compiled circuits and keys.
 
 Start the proof server in a separate terminal (leave it running):
 
@@ -89,14 +89,11 @@ Or with each test named:
 npm run test:verbose
 ```
 
-20 tests across both contracts, each split into circuit logic / state transitions / privacy:
-
-- **Survey** — a committed member can respond once; a non-member is rejected; a second response from the same member is rejected; tallies match the chosen option; no raw member key ever appears in ledger state.
-- **Counter** (Level 1-3 foundation) — `setGuard` publishes a commitment and refuses to run twice; `unlock` only succeeds for a caller holding the matching key; the raw key never appears in ledger state.
+10 tests split into circuit logic / state transitions / privacy: a committed member can respond once; a non-member is rejected; a second response from the same member is rejected; tallies match the chosen option; no raw member key ever appears in ledger state.
 
 ## CI/CD
 
-Every push and pull request to `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which checks out the repo, installs Node 22 and the Compact toolchain, compiles both contracts from source, and runs the full test suite. The badge at the top of this README reflects the latest run.
+Every push and pull request to `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which checks out the repo, installs Node 22 and the Compact toolchain, compiles the contract from source, and runs the full test suite. The badge at the top of this README reflects the latest run.
 
 ## Run the frontend locally
 
@@ -104,30 +101,20 @@ Every push and pull request to `main` runs [`.github/workflows/ci.yml`](.github/
 npm run dev
 ```
 
-Opens at `http://localhost:5173`. `VITE_NETWORK_ID`, `VITE_SURVEY_CONTRACT_ADDRESS`, and `VITE_CONTRACT_ADDRESS` in `.env` control which network and contracts the UI points at — make sure Lace is unlocked and set to the matching network.
+Opens at `http://localhost:5173`. `VITE_NETWORK_ID` and `VITE_SURVEY_CONTRACT_ADDRESS` in `.env` control which network and contract the UI points at — make sure Lace is unlocked and set to the matching network.
 
 ## Deploy your own survey
 
 ```
-npm run deploy-survey -- --network preview
+npm run deploy -- --network preview
 ```
 
 Generates 8 fresh member keys, deploys with their commitments baked in, and writes the keys to a local `.survey-roster-keys.<network>.json` (gitignored — never commit it). Distribute one key per real member out of band, then delete the unused ones from your copy.
 
-## Where this came from
-
-Levels 1-3 built the guarded counter as a rehearsal: prove you hold a secret without ever showing it, and the chain only ever sees a hash of it. This survey is that same pattern turned into an actual product — the kind of access control that matters anywhere you need to prove you're allowed to do something without revealing who you are, not just for counters but for feedback that people will only give honestly if they know it can't be traced back to them.
-
 ## Demo video
 
-https://drive.google.com/file/d/1X8G094y0o9922s8zEqa4BfwiFlBLhPnv/view?usp=drive_link
+Coming shortly.
 
 ## Screenshots
 
-Compile output, both circuits building clean:
-
-![Compile output](screenshots/compile-output.png)
-
-Contract live on Preview, confirmed on the block explorer:
-
-![Contract deployed on Preview](screenshots/contract-deployed.png)
+Coming shortly.
