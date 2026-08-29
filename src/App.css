@@ -140,14 +140,37 @@ button:disabled {
   margin: 0 0 1.25rem;
 }
 
-.member-key-form {
-  display: flex;
-  gap: 0.5rem;
+.member-key-form,
+.create-field {
   margin-bottom: 1.25rem;
 }
 
-.member-key-form input {
+.member-key-form label,
+.create-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: #9a9aa8;
+  margin-bottom: 0.4rem;
+}
+
+.create-field--row {
+  display: flex;
+  gap: 1rem;
+}
+
+.create-field--row > div {
   flex: 1;
+}
+
+.copy-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.member-key-form input,
+.create-field input {
+  flex: 1;
+  width: 100%;
   background: #17171d;
   border: 1px solid #2a2a33;
   border-radius: 8px;
@@ -155,6 +178,37 @@ button:disabled {
   color: #eaeaf0;
   font-family: ui-monospace, monospace;
   font-size: 0.85rem;
+}
+
+.create-field input[type="text"] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.copy-row input {
+  width: auto;
+}
+
+.copy-row button {
+  flex-shrink: 0;
+}
+
+.key-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.create-button {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel-divider {
+  border: none;
+  border-top: 1px solid #22222a;
+  margin: 1.5rem 0;
 }
 
 .survey-panel .circuit-buttons {
