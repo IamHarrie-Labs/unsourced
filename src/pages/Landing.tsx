@@ -1,12 +1,24 @@
+import { useEffect, useState } from "react";
+
 interface Props {
   onEnterApp: () => void;
   onOpenDocs: () => void;
 }
 
 export function Landing({ onEnterApp, onOpenDocs }: Props) {
+  const [navVisible, setNavVisible] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setNavVisible(window.scrollY > 40);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="landing">
-      <div className="landing-nav">
+      <div className={navVisible ? "landing-nav landing-nav--visible" : "landing-nav"}>
         <div className="landing-logo">Unsourced</div>
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
@@ -25,13 +37,11 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
           <span className="outline">SOURCED</span>
         </div>
         <div className="landing-hero-grid">
-          <div className="landing-hero-lede">
-            Ask your group a question. Everyone answers once. Nobody, not even you, can tell who said what.
-          </div>
+          <div className="landing-hero-lede">Ask your group something. Everyone gets one answer, and even you can't tell who said what.</div>
           <div className="landing-hero-actions">
             <div className="landing-hero-sub">
-              A survey where every response is provably from an eligible member, and nobody, including whoever ran
-              it, can tell which one.
+              Every answer here comes from someone on your list, but nobody, not even whoever's running the
+              survey, can tell whose it was.
             </div>
             <div className="landing-hero-buttons">
               <button className="btn btn-solid btn-display" onClick={onEnterApp}>
@@ -60,23 +70,19 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
             <div className="how-number">01</div>
             <div className="how-heading">Write the question</div>
             <div className="how-body">
-              Three answer options, up to eight people, and how many answers you want in before results unlock.
+              Pick three options, decide how many people you're asking, and set how many answers you want in
+              before results show up.
             </div>
           </div>
           <div className="how-cell">
             <div className="how-number">02</div>
             <div className="how-heading">Hand out the keys</div>
-            <div className="how-body">
-              You get one single-use key per person. Only the hash of each key goes on-chain, never the key itself.
-            </div>
+            <div className="how-body">Each person gets one key that only works once. The chain only ever sees a hash of it, never the key.</div>
           </div>
           <div className="how-cell">
             <div className="how-number">03</div>
             <div className="how-heading">They answer once</div>
-            <div className="how-body">
-              Their device proves the key is on your list without saying which one it is. The tally goes up by one.
-              Nothing else is written.
-            </div>
+            <div className="how-body">Their device proves the key is on your list, not which one it is. One tally goes up. That's all that gets written.</div>
           </div>
         </div>
       </div>
@@ -105,15 +111,15 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
             </div>
           </div>
           <div className="ledger-note">
-            The threshold is a display choice, not a cryptographic seal. Tallies live on a public ledger, so someone
-            querying it directly could read them early. The point is that a handful of early answers can't be
-            pinned on individuals by process of elimination.
+            The threshold just controls what the app shows you. Tallies sit on the public ledger the whole time,
+            so anyone reading it directly could see them early. It's there so a few early answers can't be traced
+            back to specific people just by elimination.
           </div>
         </div>
       </div>
 
       <div className="landing-cta">
-        <div className="landing-cta-title">Ask the thing nobody will say out loud</div>
+        <div className="landing-cta-title">Ask the thing nobody says out loud</div>
         <button className="btn btn-solid btn-display" onClick={onEnterApp}>
           Connect wallet
         </button>

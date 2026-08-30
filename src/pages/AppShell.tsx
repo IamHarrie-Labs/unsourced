@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSurveyContract, type Wallet } from "../hooks/useSurvey";
 import { WalletConnect } from "../components/WalletConnect";
 import { CreateSurvey } from "../components/CreateSurvey";
@@ -24,6 +24,19 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
   const [tab, setTab] = useState<Tab>(initialSurveyAddress ? "answer" : "create");
   const [question, setQuestion] = useState<string | undefined>(initialQuestion);
   const [options, setOptions] = useState<[string, string, string]>(initialOptions ?? DEFAULT_OPTIONS);
+
+  // Disconnecting mid-session should drop you back to the landing page,
+  // not leave you staring at a dashboard with no wallet behind it. Only
+  // fires on an actual disconnect, not on first render before anyone's
+  // connected (arriving here straight from a survey link starts out
+  // "disconnected" too, and that's a normal state, not an exit).
+  const wasConnected = useRef(false);
+  useEffect(() => {
+    if (wallet.status === "connected") wasConnected.current = true;
+    if (wasConnected.current && wallet.status === "disconnected") {
+      onGoHome();
+    }
+  }, [wallet.status, onGoHome]);
 
   function tabClass(name: Tab): string {
     return tab === name ? "app-tab app-tab--active" : "app-tab";
