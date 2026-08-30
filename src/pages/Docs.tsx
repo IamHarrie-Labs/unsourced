@@ -125,7 +125,7 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               </div>
               <div className="docs-table-row">
                 <span className="docs-table-key">Preview</span>
-                <span>d2549a8f19f9bea396225d835cd54b5df552acf12649bb64260ee6dcad8e6765</span>
+                <span>9c4e3b4be9bd1b997f44bdbd5ba4af6df58c8e82a717a99102b5081e0c36841c</span>
               </div>
             </div>
             <p className="docs-p" style={{ marginTop: 14 }}>
