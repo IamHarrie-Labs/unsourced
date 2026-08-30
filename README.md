@@ -22,11 +22,11 @@ That's the address of the demo survey linked above; every survey created through
 
 ## What this does
 
-Anyone can start a survey: pick a question, say how many people you're asking (up to 8 for now), and how many answers should come in before you can see results. The app generates one access key per person and deploys a contract with only their key's hash written on-chain, never the key itself.
+Anyone can start a survey: write up to four questions (three options each), say how many people you're asking (up to 8 for now), and how many answers should come in before you can see results. The app generates one access key per person and deploys a contract with only their key's hash written on-chain, never the key itself.
 
-To answer, a person pastes the key they were given. The app proves their key matches one of the hashes on that survey's roster, without ever saying which one. That same hash doubles as a one-time-use marker: answer once, and the contract remembers, without remembering who you are.
+To answer, a person pastes the key they were given, then picks an option for each question. The app proves their key matches one of the hashes on that survey's roster, without ever saying which one, and sends every answer in a single transaction. That same hash doubles as a one-time-use marker: answer once, and the contract remembers, without remembering who you are.
 
-No individual answer is ever stored on its own. Answering just adds one to a running tally for whichever option was picked, so there's nothing on the ledger to unlink a person from an answer, because the two were never linked in the first place.
+No individual answer is ever stored on its own. Answering just adds one to a running tally for whichever option was picked on each question, so there's nothing on the ledger to unlink a person from an answer, because the two were never linked in the first place.
 
 This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymous feedback tool for groups that already have a roster (teams, classes, DAOs) where the value isn't hiding from a stranger, it's hiding from the person who'll actually read the results.
 
@@ -35,8 +35,8 @@ This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymo
 **What an on-chain observer can learn:**
 
 - The 8 member commitments, published once at deploy time.
-- The response count and the three tally totals.
-- That some committed member responded, and which of the three tallies grew, never which member.
+- The response count and the tally totals for every question.
+- That some committed member responded, and which tallies grew, never which member.
 
 **What an on-chain observer cannot learn:**
 
@@ -93,7 +93,7 @@ Or with each test named:
 npm run test:verbose
 ```
 
-10 tests split into circuit logic / state transitions / privacy: a committed member can respond once; a non-member is rejected; a second response from the same member is rejected; tallies match the chosen option; no raw member key ever appears in ledger state.
+12 tests split into circuit logic / state transitions / privacy: a committed member can respond once, across every question in one submission; a non-member is rejected; a second response from the same member is rejected; tallies match the chosen options; question slots beyond a survey's real question count are ignored; no raw member key ever appears in ledger state.
 
 ## CI/CD
 

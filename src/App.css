@@ -799,6 +799,11 @@ button {
   cursor: not-allowed;
 }
 
+.option-pick--picked {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
 .option-pick-letter {
   font-family: Anton, Impact, sans-serif;
   font-size: 18px;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useSurveyContract, type Wallet } from "../hooks/useSurvey";
+import { useSurveyContract, type Wallet, type SurveyQuestion } from "../hooks/useSurvey";
 import { WalletConnect } from "../components/WalletConnect";
 import { CreateSurvey } from "../components/CreateSurvey";
 import { AnswerSurvey } from "../components/AnswerSurvey";
@@ -13,17 +13,15 @@ interface Props {
   onGoHome: () => void;
   onOpenDocs: () => void;
   initialSurveyAddress?: string;
-  initialQuestion?: string;
-  initialOptions?: [string, string, string];
+  initialQuestions?: SurveyQuestion[];
 }
 
-const DEFAULT_OPTIONS: [string, string, string] = ["Going well", "Mixed", "Needs work"];
+const DEFAULT_QUESTIONS: SurveyQuestion[] = [];
 
-export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, initialQuestion, initialOptions }: Props) {
+export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, initialQuestions }: Props) {
   const survey = useSurveyContract(wallet, initialSurveyAddress);
   const [tab, setTab] = useState<Tab>(initialSurveyAddress ? "answer" : "create");
-  const [question, setQuestion] = useState<string | undefined>(initialQuestion);
-  const [options, setOptions] = useState<[string, string, string]>(initialOptions ?? DEFAULT_OPTIONS);
+  const [questions, setQuestions] = useState<SurveyQuestion[]>(initialQuestions ?? DEFAULT_QUESTIONS);
 
   // Disconnecting mid-session should drop you back to the landing page,
   // not leave you staring at a dashboard with no wallet behind it. Only
@@ -77,14 +75,13 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
             wallet={wallet}
             survey={survey}
             onDeployed={(deployed) => {
-              setQuestion(deployed.question);
-              setOptions(deployed.options);
+              setQuestions(deployed.questions);
               setTab("results");
             }}
           />
         )}
-        {tab === "answer" && <AnswerSurvey wallet={wallet} survey={survey} question={question} options={options} onAnswered={() => {}} />}
-        {tab === "results" && <ResultsView wallet={wallet} survey={survey} question={question} options={options} />}
+        {tab === "answer" && <AnswerSurvey wallet={wallet} survey={survey} questions={questions} onAnswered={() => {}} />}
+        {tab === "results" && <ResultsView wallet={wallet} survey={survey} questions={questions} />}
         {tab === "history" && <HistoryView wallet={wallet} />}
       </div>
     </div>

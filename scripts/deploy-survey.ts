@@ -30,6 +30,7 @@ globalThis.WebSocket = WebSocket;
 
 const PRIVATE_STATE_ID = 'surveyPrivateState';
 const ROSTER_SIZE = 8;
+const DEFAULT_QUESTION_COUNT = 1;
 const DEFAULT_REVEAL_THRESHOLD = 3;
 const ROSTER_KEYS_FILE_BASE = '.survey-roster-keys';
 
@@ -269,7 +270,7 @@ async function main() {
   const RETRY_DELAY_MS = 5000;
   let deployed: Awaited<ReturnType<typeof deployContract>> | undefined;
 
-  const args = [...commitments, BigInt(DEFAULT_REVEAL_THRESHOLD)];
+  const args = [...commitments, BigInt(DEFAULT_QUESTION_COUNT), BigInt(DEFAULT_REVEAL_THRESHOLD)];
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -352,6 +353,7 @@ async function main() {
       {
         network,
         contractAddress,
+        questionCount: DEFAULT_QUESTION_COUNT,
         revealThreshold: DEFAULT_REVEAL_THRESHOLD,
         memberSecretKeys: secretKeys.map(toHex),
       },

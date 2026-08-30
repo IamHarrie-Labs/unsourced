@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useWallet } from "./hooks/useSurvey";
+import { useWallet, decodeShareData, type SurveyQuestion } from "./hooks/useSurvey";
 import { Landing } from "./pages/Landing";
 import { Docs } from "./pages/Docs";
 import { AppShell } from "./pages/AppShell";
@@ -9,11 +9,9 @@ type Page = "landing" | "app" | "docs";
 
 const params = new URLSearchParams(window.location.search);
 const SURVEY_FROM_LINK = params.get("survey") ?? undefined;
-const QUESTION_FROM_LINK = params.get("q") ?? undefined;
-const OPTIONS_FROM_LINK: [string, string, string] | undefined =
-  params.get("a") && params.get("b") && params.get("c")
-    ? [params.get("a")!, params.get("b")!, params.get("c")!]
-    : undefined;
+const QUESTIONS_FROM_LINK: SurveyQuestion[] | undefined = params.get("data")
+  ? (decodeShareData(params.get("data")!) ?? undefined)
+  : undefined;
 
 function App() {
   const wallet = useWallet();
@@ -35,8 +33,7 @@ function App() {
         onGoHome={() => setPage("landing")}
         onOpenDocs={() => setPage("docs")}
         initialSurveyAddress={SURVEY_FROM_LINK}
-        initialQuestion={QUESTION_FROM_LINK}
-        initialOptions={OPTIONS_FROM_LINK}
+        initialQuestions={QUESTIONS_FROM_LINK}
       />
     );
   }

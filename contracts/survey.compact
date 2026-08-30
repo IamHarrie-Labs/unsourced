@@ -2,23 +2,41 @@ pragma language_version 0.23;
 
 import CompactStandardLibrary;
 
-// A survey with a fixed, pre-committed roster of 8 members. Each member
-// gets a secret key generated for them off-chain and never shares it,
-// only its hash goes on the roster. Responding proves "I hold a key on
-// this roster" without saying which one, and the same commitment doubles
-// as its own one-time nullifier: once it's been used to respond, it can't
-// be used again, but nothing about it points back to a specific member.
+// A survey with a fixed, pre-committed roster of 8 members and up to four
+// questions, each with three answer options. Each member gets a secret key
+// generated for them off-chain and never shares it, only its hash goes on
+// the roster. Answering proves "I hold a key on this roster" without saying
+// which one, and the same commitment doubles as its own one-time nullifier:
+// once it's been used, it can't be used again, but nothing about it points
+// back to a specific member.
 //
-// The three response options are just tally counters. No individual
-// response is ever stored, only which bucket grew by one, so there is
-// nothing on the ledger to unlink from a person, because it was never
-// linked in the first place.
+// All of a member's answers go in through one call, checked and nullified
+// once, so a member can't be tracked across separate per-question
+// submissions the way they could if each question had its own nullifier.
+//
+// The answer options are just tally counters. No individual answer is
+// ever stored, only which bucket grew by one, so there is nothing on the
+// ledger to unlink from a person, because it was never linked in the
+// first place. A question slot beyond questionCount is simply never
+// touched; passing 255 for that slot tells the circuit to skip it.
 
 export ledger memberCommitments: Set<Bytes<32>>;
 export ledger usedCommitments: Set<Bytes<32>>;
-export ledger tallyA: Counter;
-export ledger tallyB: Counter;
-export ledger tallyC: Counter;
+export ledger questionCount: Uint<8>;
+
+export ledger tallyQ1A: Counter;
+export ledger tallyQ1B: Counter;
+export ledger tallyQ1C: Counter;
+export ledger tallyQ2A: Counter;
+export ledger tallyQ2B: Counter;
+export ledger tallyQ2C: Counter;
+export ledger tallyQ3A: Counter;
+export ledger tallyQ3B: Counter;
+export ledger tallyQ3C: Counter;
+export ledger tallyQ4A: Counter;
+export ledger tallyQ4B: Counter;
+export ledger tallyQ4C: Counter;
+
 export ledger responseCount: Counter;
 export ledger revealThreshold: Uint<16>;
 
@@ -33,6 +51,7 @@ constructor(
   member5: Bytes<32>,
   member6: Bytes<32>,
   member7: Bytes<32>,
+  numQuestions: Uint<8>,
   threshold: Uint<16>,
 ) {
   memberCommitments.insert(disclose(member0));
@@ -43,29 +62,54 @@ constructor(
   memberCommitments.insert(disclose(member5));
   memberCommitments.insert(disclose(member6));
   memberCommitments.insert(disclose(member7));
+  questionCount = disclose(numQuestions);
   revealThreshold = disclose(threshold);
 }
 
-circuit recordResponse(): Bytes<32> {
+// 255 means "no answer for this question slot", used both for questions
+// past questionCount and, harmlessly, for any real question a member
+// leaves blank.
+export circuit respond(q1: Uint<8>, q2: Uint<8>, q3: Uint<8>, q4: Uint<8>): [] {
   const commitment = disclose(persistentHash<Vector<1, Bytes<32>>>([secretKey()]));
   assert(memberCommitments.member(commitment), "You're not on this survey's member list");
   assert(!usedCommitments.member(commitment), "You've already responded to this survey");
   usedCommitments.insert(commitment);
   responseCount.increment(1);
-  return commitment;
-}
 
-export circuit respondA(): [] {
-  recordResponse();
-  tallyA.increment(1);
-}
+  const dq1 = disclose(q1);
+  const dq2 = disclose(q2);
+  const dq3 = disclose(q3);
+  const dq4 = disclose(q4);
 
-export circuit respondB(): [] {
-  recordResponse();
-  tallyB.increment(1);
-}
+  if (dq1 == 0) {
+    tallyQ1A.increment(1);
+  } else if (dq1 == 1) {
+    tallyQ1B.increment(1);
+  } else if (dq1 == 2) {
+    tallyQ1C.increment(1);
+  }
 
-export circuit respondC(): [] {
-  recordResponse();
-  tallyC.increment(1);
+  if (dq2 == 0) {
+    tallyQ2A.increment(1);
+  } else if (dq2 == 1) {
+    tallyQ2B.increment(1);
+  } else if (dq2 == 2) {
+    tallyQ2C.increment(1);
+  }
+
+  if (dq3 == 0) {
+    tallyQ3A.increment(1);
+  } else if (dq3 == 1) {
+    tallyQ3B.increment(1);
+  } else if (dq3 == 2) {
+    tallyQ3C.increment(1);
+  }
+
+  if (dq4 == 0) {
+    tallyQ4A.increment(1);
+  } else if (dq4 == 1) {
+    tallyQ4B.increment(1);
+  } else if (dq4 == 2) {
+    tallyQ4C.increment(1);
+  }
 }

@@ -27,8 +27,9 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
             <div className="docs-heading">What it is</div>
             <p className="docs-p">
               Unsourced is an anonymous survey for a group you already know: a team, a class, a DAO. You pick who
-              can answer, hand each of them a single-use key, and ask your question. Everyone can answer once.
-              Afterwards you can see the totals, and nobody can see who chose what, including you.
+              can answer, hand each of them a single-use key, and ask up to four questions. Everyone answers once,
+              covering every question in a single go. Afterwards you can see the totals, and nobody can see who
+              chose what, including you.
             </p>
             <p className="docs-p">
               The value isn't hiding from a stranger. It's hiding from the person who'll actually read the results.
@@ -45,8 +46,8 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               <div className="docs-step">
                 <span className="docs-step-n">02</span>
                 <span className="docs-step-body">
-                  Write your question and three options. Choose how many people you're asking (up to eight) and how
-                  many answers should arrive before results unlock.
+                  Write your questions (up to four, three options each). Choose how many people you're asking (up
+                  to eight) and how many answers should arrive before results unlock.
                 </span>
               </div>
               <div className="docs-step">
@@ -71,9 +72,10 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
           <div>
             <div className="docs-heading">Answering one</div>
             <p className="docs-p">
-              Open the link, paste your key, pick an option. Your browser builds a proof that your key is one of the
-              keys on that survey's list, without revealing which. The survey's total for your option goes up by
-              one and your key is marked as spent. You cannot answer twice, and you cannot change your answer.
+              Open the link, paste your key, pick an option for each question. Your browser builds one proof that
+              your key is on that survey's list, without revealing which, covering every question in a single
+              transaction. Each tally you picked goes up by one and your key is marked as spent. You cannot answer
+              twice, and you cannot change your answer.
             </p>
           </div>
 
@@ -82,9 +84,9 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
             <div className="docs-label">What an observer can learn</div>
             <div className="docs-list">
               <div className="docs-list-item">The 8 member commitments, published once at deploy time.</div>
-              <div className="docs-list-item">The response count and the three tally totals.</div>
+              <div className="docs-list-item">The response count and the tally totals for every question.</div>
               <div className="docs-list-item">
-                That some committed member responded, and which of the three tallies grew: never which member.
+                That some committed member responded, and which tallies grew: never which member.
               </div>
             </div>
             <div className="docs-label" style={{ marginTop: 28 }}>

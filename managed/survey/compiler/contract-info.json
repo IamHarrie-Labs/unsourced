@@ -4,34 +4,38 @@
   "runtime-version": "0.16.0",
   "circuits": [
     {
-      "name": "respondA",
+      "name": "respond",
       "pure": false,
       "proof": true,
       "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "respondB",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "respondC",
-      "pure": false,
-      "proof": true,
-      "arguments": [
+        {
+          "name": "q1",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 255
+          }
+        },
+        {
+          "name": "q2",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 255
+          }
+        },
+        {
+          "name": "q3",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 255
+          }
+        },
+        {
+          "name": "q4",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 255
+          }
+        }
       ],
       "result-type": {
         "type-name": "Tuple",
@@ -56,7 +60,10 @@
   "ledger": [
     {
       "name": "memberCommitments",
-      "index": 0,
+      "index": [
+        0,
+        0
+      ],
       "exported": true,
       "storage": "Set",
       "type": {
@@ -66,7 +73,10 @@
     },
     {
       "name": "usedCommitments",
-      "index": 1,
+      "index": [
+        0,
+        1
+      ],
       "exported": true,
       "storage": "Set",
       "type": {
@@ -75,32 +85,141 @@
       }
     },
     {
-      "name": "tallyA",
-      "index": 2,
+      "name": "questionCount",
+      "index": [
+        1,
+        0
+      ],
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Uint",
+        "maxval": 255
+      }
+    },
+    {
+      "name": "tallyQ1A",
+      "index": [
+        1,
+        1
+      ],
       "exported": true,
       "storage": "Counter"
     },
     {
-      "name": "tallyB",
-      "index": 3,
+      "name": "tallyQ1B",
+      "index": [
+        1,
+        2
+      ],
       "exported": true,
       "storage": "Counter"
     },
     {
-      "name": "tallyC",
-      "index": 4,
+      "name": "tallyQ1C",
+      "index": [
+        1,
+        3
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ2A",
+      "index": [
+        1,
+        4
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ2B",
+      "index": [
+        1,
+        5
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ2C",
+      "index": [
+        1,
+        6
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ3A",
+      "index": [
+        1,
+        7
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ3B",
+      "index": [
+        1,
+        8
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ3C",
+      "index": [
+        1,
+        9
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ4A",
+      "index": [
+        1,
+        10
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ4B",
+      "index": [
+        1,
+        11
+      ],
+      "exported": true,
+      "storage": "Counter"
+    },
+    {
+      "name": "tallyQ4C",
+      "index": [
+        1,
+        12
+      ],
       "exported": true,
       "storage": "Counter"
     },
     {
       "name": "responseCount",
-      "index": 5,
+      "index": [
+        1,
+        13
+      ],
       "exported": true,
       "storage": "Counter"
     },
     {
       "name": "revealThreshold",
-      "index": 6,
+      "index": [
+        1,
+        14
+      ],
       "exported": true,
       "storage": "Cell",
       "type": {

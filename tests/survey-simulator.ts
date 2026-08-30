@@ -7,13 +7,17 @@ import {
 import { Contract, type Ledger, ledger } from "../managed/survey/contract/index.js";
 import { type SurveyPrivateState, surveyWitnesses } from "../contracts/survey-witnesses.js";
 
+// 255 means "no answer for this slot", used both for questions past
+// questionCount and for a real question left unanswered.
+export const NO_ANSWER = 255n;
+
 // Thin wrapper mirroring CounterSimulator, sized for the survey's fixed
-// 8-member roster and 3 response options.
+// 8-member roster and up to 4 questions of 3 options each.
 export class SurveySimulator {
   readonly contract: Contract<SurveyPrivateState>;
   circuitContext: CircuitContext<SurveyPrivateState>;
 
-  constructor(members: Uint8Array[], threshold: bigint, callerSecretKey: Uint8Array) {
+  constructor(members: Uint8Array[], numQuestions: bigint, threshold: bigint, callerSecretKey: Uint8Array) {
     if (members.length !== 8) throw new Error("SurveySimulator needs exactly 8 member commitments");
     this.contract = new Contract<SurveyPrivateState>(surveyWitnesses);
     const { currentPrivateState, currentContractState, currentZswapLocalState } =
@@ -27,6 +31,7 @@ export class SurveySimulator {
         members[5],
         members[6],
         members[7],
+        numQuestions,
         threshold,
       );
     this.circuitContext = createCircuitContext(
@@ -41,24 +46,15 @@ export class SurveySimulator {
     return ledger(this.circuitContext.currentQueryContext.state);
   }
 
-  private respondWith(circuit: "respondA" | "respondB" | "respondC", secretKey: Uint8Array): Ledger {
+  public respond(
+    secretKey: Uint8Array,
+    answers: [bigint, bigint, bigint, bigint] = [NO_ANSWER, NO_ANSWER, NO_ANSWER, NO_ANSWER],
+  ): Ledger {
     this.circuitContext = {
       ...this.circuitContext,
       currentPrivateState: { secretKey },
     };
-    this.circuitContext = this.contract.impureCircuits[circuit](this.circuitContext).context;
+    this.circuitContext = this.contract.impureCircuits.respond(this.circuitContext, ...answers).context;
     return ledger(this.circuitContext.currentQueryContext.state);
-  }
-
-  public respondA(secretKey: Uint8Array): Ledger {
-    return this.respondWith("respondA", secretKey);
-  }
-
-  public respondB(secretKey: Uint8Array): Ledger {
-    return this.respondWith("respondB", secretKey);
-  }
-
-  public respondC(secretKey: Uint8Array): Ledger {
-    return this.respondWith("respondC", secretKey);
   }
 }

@@ -86,10 +86,11 @@ function CreatedRow({ record, state, connected }: { record: CreatedSurveyRecord;
     stateLabel = state.revealed ? "Results open" : "Locked";
     stateClass = state.revealed ? "hist-row-state--yellow" : "hist-row-state--dim";
   }
+  const title = record.questions.length === 1 ? record.questions[0].text : `${record.questions[0].text} +${record.questions.length - 1} more`;
   return (
     <div className="hist-row">
       <div>
-        <div className="hist-row-q">{record.question}</div>
+        <div className="hist-row-q">{title}</div>
         <div className="hist-row-meta">
           {record.address.slice(0, 10)}… · {date}
         </div>
@@ -102,10 +103,11 @@ function CreatedRow({ record, state, connected }: { record: CreatedSurveyRecord;
 
 function AnsweredRow({ record }: { record: AnsweredSurveyRecord }) {
   const date = new Date(record.answeredAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+  const title = record.questions.length === 1 ? record.questions[0].text : `${record.questions[0].text} +${record.questions.length - 1} more`;
   return (
     <div className="hist-row">
       <div>
-        <div className="hist-row-q">{record.question}</div>
+        <div className="hist-row-q">{title}</div>
         <div className="hist-row-meta">
           {record.address.slice(0, 10)}… · {date}
         </div>

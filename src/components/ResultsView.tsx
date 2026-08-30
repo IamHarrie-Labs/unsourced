@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import type { Wallet } from "../hooks/useSurvey";
+import type { Wallet, SurveyQuestion } from "../hooks/useSurvey";
 import type { useSurveyContract, SurveyLedgerView } from "../hooks/useSurvey";
 
 interface Props {
   wallet: Wallet;
   survey: ReturnType<typeof useSurveyContract>;
-  question?: string;
-  options: [string, string, string];
+  questions: SurveyQuestion[];
 }
 
-export function ResultsView({ wallet, survey, question, options }: Props) {
+export function ResultsView({ wallet, survey, questions }: Props) {
   const { contractAddress, readLedger } = survey;
   const [ledger, setLedger] = useState<SurveyLedgerView | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +36,7 @@ export function ResultsView({ wallet, survey, question, options }: Props) {
       .finally(() => setLoading(false));
   }
 
-  if (!contractAddress) {
+  if (!contractAddress || questions.length === 0) {
     return (
       <div>
         <div className="page-title">Results</div>
@@ -58,14 +57,13 @@ export function ResultsView({ wallet, survey, question, options }: Props) {
   const responseCount = ledger ? Number(ledger.responseCount) : 0;
   const threshold = ledger ? Number(ledger.revealThreshold) : 0;
   const revealed = ledger?.revealed ?? false;
-  const total = ledger ? Number(ledger.tallyA) + Number(ledger.tallyB) + Number(ledger.tallyC) || 1 : 1;
 
   return (
     <div style={{ maxWidth: 860 }}>
       <div className="eyebrow">
         Survey · {contractAddress.slice(0, 10)}…{contractAddress.slice(-6)}
       </div>
-      <div className="big-title">{question ?? "Untitled survey"}</div>
+      <div className="big-title">{questions.length === 1 ? questions[0].text : `${questions.length} questions`}</div>
 
       <div className="stat-grid">
         <div className="stat-cell">
@@ -91,17 +89,29 @@ export function ResultsView({ wallet, survey, question, options }: Props) {
       )}
 
       {ledger && revealed && (
-        <>
-          <div className="tally-list">
-            <TallyBar label={options[0]} count={Number(ledger.tallyA)} total={total} />
-            <TallyBar label={options[1]} count={Number(ledger.tallyB)} total={total} />
-            <TallyBar label={options[2]} count={Number(ledger.tallyC)} total={total} />
-          </div>
+        <div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 44 }}>
+          {questions.map((question, qIndex) => {
+            const [a, b, c] = ledger.tallies[qIndex] ?? [0n, 0n, 0n];
+            const total = Number(a) + Number(b) + Number(c) || 1;
+            return (
+              <div key={qIndex}>
+                {questions.length > 1 && <div className="eyebrow">Question {qIndex + 1}</div>}
+                <div style={{ fontSize: 18, fontWeight: 600, marginTop: questions.length > 1 ? 8 : 0, marginBottom: 16 }}>
+                  {question.text}
+                </div>
+                <div className="tally-list" style={{ marginTop: 0 }}>
+                  <TallyBar label={question.options[0]} count={Number(a)} total={total} />
+                  <TallyBar label={question.options[1]} count={Number(b)} total={total} />
+                  <TallyBar label={question.options[2]} count={Number(c)} total={total} />
+                </div>
+              </div>
+            );
+          })}
           <div className="results-footnote">
-            Totals only. The ledger holds three numbers and a list of spent keys, no row anywhere ties a person to
-            an option.
+            Totals only. The ledger holds a handful of numbers and a list of spent keys, no row anywhere ties a
+            person to an option.
           </div>
-        </>
+        </div>
       )}
     </div>
   );

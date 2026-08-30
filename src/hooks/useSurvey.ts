@@ -18,6 +18,12 @@ import satisfies from "semver/functions/satisfies.js";
 import * as SurveyContract from "../../managed/survey/contract/index.js";
 import { inMemoryPrivateStateProvider } from "../in-memory-private-state-provider";
 
+// 255 means "no answer for this slot": either the survey has fewer than 4
+// questions, or (in principle) a question left blank.
+export const NO_ANSWER = 255;
+export const MAX_QUESTIONS = 4;
+export const OPTIONS_PER_QUESTION = 3;
+
 // Plain-language versions of what the contract's own asserts say. Someone
 // using this shouldn't need to know what an "assert" or a "circuit" is to
 // understand why a button didn't work.
@@ -73,12 +79,9 @@ function commitmentOf(secretKey: Uint8Array): Uint8Array {
   return persistentHash(COMMITMENT_DESCRIPTOR, [secretKey]);
 }
 
-export type SurveyOption = "respondA" | "respondB" | "respondC";
-
 export interface SurveyLedgerView {
-  tallyA: bigint;
-  tallyB: bigint;
-  tallyC: bigint;
+  questionCount: number;
+  tallies: [bigint, bigint, bigint][];
   responseCount: bigint;
   revealThreshold: bigint;
   revealed: boolean;
@@ -156,6 +159,15 @@ async function buildProviders(connectedApi: ConnectedAPI) {
   };
 }
 
+function readTallies(ledgerState: SurveyContract.Ledger): [bigint, bigint, bigint][] {
+  return [
+    [ledgerState.tallyQ1A, ledgerState.tallyQ1B, ledgerState.tallyQ1C],
+    [ledgerState.tallyQ2A, ledgerState.tallyQ2B, ledgerState.tallyQ2C],
+    [ledgerState.tallyQ3A, ledgerState.tallyQ3B, ledgerState.tallyQ3C],
+    [ledgerState.tallyQ4A, ledgerState.tallyQ4B, ledgerState.tallyQ4C],
+  ];
+}
+
 // Ledger reads don't need proof generation, only the indexer, so a survey
 // can be checked without spinning up the full provider stack.
 export async function readSurveyLedger(connectedApi: ConnectedAPI, contractAddress: string): Promise<SurveyLedgerView | null> {
@@ -165,9 +177,8 @@ export async function readSurveyLedger(connectedApi: ConnectedAPI, contractAddre
   if (!state) return null;
   const ledgerState = SurveyContract.ledger(state.data);
   return {
-    tallyA: ledgerState.tallyA,
-    tallyB: ledgerState.tallyB,
-    tallyC: ledgerState.tallyC,
+    questionCount: Number(ledgerState.questionCount),
+    tallies: readTallies(ledgerState),
     responseCount: ledgerState.responseCount,
     revealThreshold: ledgerState.revealThreshold,
     revealed: ledgerState.responseCount >= ledgerState.revealThreshold,
@@ -180,7 +191,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
   const [contractAddress, setContractAddress] = useState<string | undefined>(
     initialContractAddress ?? DEFAULT_CONTRACT_ADDRESS,
   );
-  const [busyOption, setBusyOption] = useState<SurveyOption | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<string | null>(null);
@@ -215,8 +226,11 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
     );
   }, []);
 
+  // answers is always 4 slots long, NO_ANSWER for anything past the
+  // survey's real questionCount. One call, one proof, one nullifier check,
+  // no matter how many of the 4 questions are real.
   const respond = useCallback(
-    async (option: SurveyOption) => {
+    async (answers: number[]) => {
       if (!wallet.connectedApi) {
         setError("Connect your wallet first.");
         return;
@@ -230,7 +244,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
         setError("Enter your access key first.");
         return;
       }
-      setBusyOption(option);
+      setSubmitting(true);
       setError(null);
       setLastResult(null);
       try {
@@ -242,8 +256,8 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
           privateStateId: PRIVATE_STATE_ID,
           initialPrivateState: { secretKey: memberKey },
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tx = await (deployed.callTx as any)[option]();
+        const padded = Array.from({ length: MAX_QUESTIONS }, (_, i) => BigInt(answers[i] ?? NO_ANSWER));
+        const tx = await deployed.callTx.respond(...(padded as [bigint, bigint, bigint, bigint]));
         setLastResult(`Sent. Transaction id: ${tx.public.txId}`);
         localStorage.setItem(respondedStorageKey(contractAddress), "true");
         setHasResponded(true);
@@ -251,7 +265,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
         const raw = e instanceof Error ? e.message : `Failed to send your answer`;
         setError(humanizeError(raw));
       } finally {
-        setBusyOption(null);
+        setSubmitting(false);
       }
     },
     [contractAddress, compiledContract, wallet.connectedApi],
@@ -268,7 +282,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
   // this browser except in the list handed back to the caller, nothing
   // is sent anywhere but the hashes.
   const createSurvey = useCallback(
-    async (memberCount: number, revealThreshold: number): Promise<{ contractAddress: string; memberKeys: string[] } | null> => {
+    async (memberCount: number, questionCount: number, revealThreshold: number): Promise<{ contractAddress: string; memberKeys: string[] } | null> => {
       if (!wallet.connectedApi) {
         setError("Connect your wallet first.");
         return null;
@@ -285,7 +299,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
         const deployed = await deployContract(providers as never, {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           compiledContract: compiledContract as any,
-          args: [...commitments, BigInt(revealThreshold)],
+          args: [...commitments, BigInt(questionCount), BigInt(revealThreshold)],
           privateStateId: PRIVATE_STATE_ID,
           initialPrivateState: { secretKey: allKeys[0] },
         });
@@ -307,7 +321,7 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
   return {
     contractAddress,
     setContractAddress,
-    busyOption,
+    submitting,
     deploying,
     error,
     lastResult,
@@ -322,10 +336,14 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
 
 // ---------- Local history (this browser only) ----------
 
+export interface SurveyQuestion {
+  text: string;
+  options: [string, string, string];
+}
+
 export interface CreatedSurveyRecord {
   address: string;
-  question: string;
-  options: [string, string, string];
+  questions: SurveyQuestion[];
   people: number;
   threshold: number;
   createdAt: string;
@@ -333,7 +351,7 @@ export interface CreatedSurveyRecord {
 
 export interface AnsweredSurveyRecord {
   address: string;
-  question: string;
+  questions: SurveyQuestion[];
   answeredAt: string;
 }
 
@@ -365,4 +383,28 @@ export function getAnsweredHistory(): AnsweredSurveyRecord[] {
 export function recordAnsweredSurvey(record: AnsweredSurveyRecord): void {
   const list = [record, ...getAnsweredHistory().filter((r) => r.address !== record.address)];
   localStorage.setItem(ANSWERED_HISTORY_KEY, JSON.stringify(list));
+}
+
+// ---------- Share-link payload ----------
+// Question text and option labels never touch the chain, only their
+// count and which option was picked do. The link carries the wording so
+// whoever opens it sees real questions instead of "Option A/B/C".
+
+export function encodeShareData(questions: SurveyQuestion[]): string {
+  const json = JSON.stringify({ questions });
+  return btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+export function decodeShareData(encoded: string): SurveyQuestion[] | null {
+  try {
+    const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(escape(atob(base64)));
+    const parsed = JSON.parse(json) as { questions: SurveyQuestion[] };
+    return parsed.questions;
+  } catch {
+    return null;
+  }
 }
