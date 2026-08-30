@@ -1,29 +1,26 @@
-import type { useSurvey } from "../hooks/useSurvey";
-
-type Props = Pick<ReturnType<typeof useSurvey>, "status" | "address" | "error" | "connect" | "disconnect">;
+import type { Wallet } from "../hooks/useSurvey";
 
 function shorten(address: string): string {
-  return address.length > 20 ? `${address.slice(0, 12)}…${address.slice(-6)}` : address;
+  return address.length > 20 ? `${address.slice(0, 10)}…${address.slice(-4)}` : address;
 }
 
-export function WalletConnect({ status, address, error, connect, disconnect }: Props) {
+export function WalletConnect({ status, address, error, connect, disconnect }: Wallet) {
   if (status === "connected" && address) {
     return (
-      <div className="wallet-connect wallet-connect--connected">
+      <button className="wallet-pill" onClick={disconnect} title="Disconnect">
         <span className="wallet-dot" />
-        <span title={address}>{shorten(address)}</span>
-        <button onClick={disconnect}>Disconnect</button>
-      </div>
+        <span>{shorten(address)}</span>
+      </button>
     );
   }
 
   return (
-    <div className="wallet-connect">
-      <button onClick={connect} disabled={status === "connecting"}>
-        {status === "connecting" ? "Connecting…" : "Connect Lace"}
+    <div>
+      <button className="btn btn-solid" onClick={connect} disabled={status === "connecting"}>
+        {status === "connecting" ? "Connecting…" : "Connect wallet"}
       </button>
       {status === "error" && error && (
-        <p className="wallet-error">
+        <p className="wallet-connect-error">
           {error.includes("No Midnight wallet found")
             ? "Couldn't find a wallet. Install the Lace extension and unlock it, then try again."
             : error}

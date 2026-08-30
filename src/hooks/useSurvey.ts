@@ -1,7 +1,7 @@
-// Wallet connection + survey contract interaction — both joining an
-// existing survey and deploying a brand new one from the browser. No CLI
-// step required: whoever creates a survey does it by clicking a button
-// here, using their own connected wallet to pay for the deploy.
+// Wallet connection + survey contract interaction. Wallet connection is
+// shared across the whole app (one connect, every tab sees it); contract
+// calls are parameterized by whichever survey address is currently in
+// view, since a single browser session can create or answer more than one.
 
 import { useCallback, useMemo, useState } from "react";
 import type { ConnectedAPI, InitialAPI } from "@midnight-ntwrk/dapp-connector-api";
@@ -29,10 +29,10 @@ function humanizeError(raw: string): string {
     return "That key doesn't belong to this survey.";
   }
   if (message.includes("already responded")) {
-    return "That key has already been used to answer this survey — one answer per person.";
+    return "That key has already been used to answer this survey. One answer per person.";
   }
   if (raw.includes("disconnected from") || raw.includes("ECONNREFUSED")) {
-    return "Lost the connection partway through. This usually clears up — try again.";
+    return "Lost the connection partway through. This usually clears up, try again.";
   }
   return message;
 }
@@ -86,34 +86,13 @@ export interface SurveyLedgerView {
 
 type WalletStatus = "disconnected" | "connecting" | "connected" | "error";
 
-export function useSurvey(initialContractAddress?: string) {
-  const [contractAddress, setContractAddress] = useState<string | undefined>(
-    initialContractAddress ?? DEFAULT_CONTRACT_ADDRESS,
-  );
+// ---------- Shared wallet connection (one per app, not per tab) ----------
+
+export function useWallet() {
   const [status, setStatus] = useState<WalletStatus>("disconnected");
   const [address, setAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [connectedApi, setConnectedApi] = useState<ConnectedAPI | null>(null);
-  const [busyOption, setBusyOption] = useState<SurveyOption | null>(null);
-  const [deploying, setDeploying] = useState(false);
-  const [lastResult, setLastResult] = useState<string | null>(null);
-  const [memberKeyHex, setMemberKeyHex] = useState<string | null>(() => {
-    if (!contractAddress) return null;
-    const key = getLocalMemberKey(contractAddress);
-    return key ? toHex(key) : null;
-  });
-  const [hasResponded, setHasResponded] = useState<boolean>(
-    () => !!contractAddress && localStorage.getItem(respondedStorageKey(contractAddress)) === "true",
-  );
-
-  const setMemberKey = useCallback(
-    (hex: string) => {
-      if (!contractAddress) return;
-      localStorage.setItem(memberKeyStorageKey(contractAddress), hex.trim());
-      setMemberKeyHex(hex.trim());
-    },
-    [contractAddress],
-  );
 
   const connect = useCallback(async () => {
     setStatus("connecting");
@@ -145,33 +124,83 @@ export function useSurvey(initialContractAddress?: string) {
     setError(null);
   }, []);
 
-  const getProviders = useCallback(async () => {
-    if (!connectedApi) throw new Error("Wallet not connected");
-    const config = await connectedApi.getConfiguration();
-    const zkConfigProvider = new FetchZkConfigProvider(window.location.origin, fetch.bind(window));
-    const { shieldedCoinPublicKey, shieldedEncryptionPublicKey } = await connectedApi.getShieldedAddresses();
+  return { status, address, error, connectedApi, connect, disconnect, networkId: NETWORK_ID };
+}
 
-    return {
-      privateStateProvider: inMemoryPrivateStateProvider(),
-      zkConfigProvider,
-      proofProvider: httpClientProofProvider(config.proverServerUri ?? "http://127.0.0.1:6300", zkConfigProvider),
-      publicDataProvider: indexerPublicDataProvider(config.indexerUri, config.indexerWsUri),
-      walletProvider: {
-        getCoinPublicKey: () => shieldedCoinPublicKey,
-        getEncryptionPublicKey: () => shieldedEncryptionPublicKey,
-        balanceTx: async (tx: { serialize: () => Uint8Array }) => {
-          const { tx: balanced } = await connectedApi.balanceUnsealedTransaction(toHex(tx.serialize()));
-          return Transaction.deserialize("signature", "proof", "binding", fromHex(balanced));
-        },
+export type Wallet = ReturnType<typeof useWallet>;
+
+async function buildProviders(connectedApi: ConnectedAPI) {
+  const config = await connectedApi.getConfiguration();
+  const zkConfigProvider = new FetchZkConfigProvider(window.location.origin, fetch.bind(window));
+  const { shieldedCoinPublicKey, shieldedEncryptionPublicKey } = await connectedApi.getShieldedAddresses();
+
+  return {
+    privateStateProvider: inMemoryPrivateStateProvider(),
+    zkConfigProvider,
+    proofProvider: httpClientProofProvider(config.proverServerUri ?? "http://127.0.0.1:6300", zkConfigProvider),
+    publicDataProvider: indexerPublicDataProvider(config.indexerUri, config.indexerWsUri),
+    walletProvider: {
+      getCoinPublicKey: () => shieldedCoinPublicKey,
+      getEncryptionPublicKey: () => shieldedEncryptionPublicKey,
+      balanceTx: async (tx: { serialize: () => Uint8Array }) => {
+        const { tx: balanced } = await connectedApi.balanceUnsealedTransaction(toHex(tx.serialize()));
+        return Transaction.deserialize("signature", "proof", "binding", fromHex(balanced));
       },
-      midnightProvider: {
-        submitTx: async (tx: Transaction<SignatureEnabled, Proof, Binding>) => {
-          await connectedApi.submitTransaction(toHex(tx.serialize()));
-          return tx.identifiers()[0];
-        },
+    },
+    midnightProvider: {
+      submitTx: async (tx: Transaction<SignatureEnabled, Proof, Binding>) => {
+        await connectedApi.submitTransaction(toHex(tx.serialize()));
+        return tx.identifiers()[0];
       },
-    };
-  }, [connectedApi]);
+    },
+  };
+}
+
+// Ledger reads don't need proof generation, only the indexer, so a survey
+// can be checked without spinning up the full provider stack.
+export async function readSurveyLedger(connectedApi: ConnectedAPI, contractAddress: string): Promise<SurveyLedgerView | null> {
+  const config = await connectedApi.getConfiguration();
+  const publicDataProvider = indexerPublicDataProvider(config.indexerUri, config.indexerWsUri);
+  const state = await publicDataProvider.queryContractState(contractAddress);
+  if (!state) return null;
+  const ledgerState = SurveyContract.ledger(state.data);
+  return {
+    tallyA: ledgerState.tallyA,
+    tallyB: ledgerState.tallyB,
+    tallyC: ledgerState.tallyC,
+    responseCount: ledgerState.responseCount,
+    revealThreshold: ledgerState.revealThreshold,
+    revealed: ledgerState.responseCount >= ledgerState.revealThreshold,
+  };
+}
+
+// ---------- Per-survey contract interaction ----------
+
+export function useSurveyContract(wallet: Wallet, initialContractAddress?: string) {
+  const [contractAddress, setContractAddress] = useState<string | undefined>(
+    initialContractAddress ?? DEFAULT_CONTRACT_ADDRESS,
+  );
+  const [busyOption, setBusyOption] = useState<SurveyOption | null>(null);
+  const [deploying, setDeploying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<string | null>(null);
+  const [memberKeyHex, setMemberKeyHex] = useState<string | null>(() => {
+    if (!contractAddress) return null;
+    const key = getLocalMemberKey(contractAddress);
+    return key ? toHex(key) : null;
+  });
+  const [hasResponded, setHasResponded] = useState<boolean>(
+    () => !!contractAddress && localStorage.getItem(respondedStorageKey(contractAddress)) === "true",
+  );
+
+  const setMemberKey = useCallback(
+    (hex: string) => {
+      if (!contractAddress) return;
+      localStorage.setItem(memberKeyStorageKey(contractAddress), hex.trim());
+      setMemberKeyHex(hex.trim());
+    },
+    [contractAddress],
+  );
 
   const compiledContract = useMemo(() => {
     const witnesses = {
@@ -188,6 +217,10 @@ export function useSurvey(initialContractAddress?: string) {
 
   const respond = useCallback(
     async (option: SurveyOption) => {
+      if (!wallet.connectedApi) {
+        setError("Connect your wallet first.");
+        return;
+      }
       if (!contractAddress) {
         setError("No survey to respond to.");
         return;
@@ -201,7 +234,7 @@ export function useSurvey(initialContractAddress?: string) {
       setError(null);
       setLastResult(null);
       try {
-        const providers = await getProviders();
+        const providers = await buildProviders(wallet.connectedApi);
         const deployed = await findDeployedContract(providers as never, {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           compiledContract: compiledContract as any,
@@ -221,36 +254,29 @@ export function useSurvey(initialContractAddress?: string) {
         setBusyOption(null);
       }
     },
-    [contractAddress, compiledContract, getProviders],
+    [contractAddress, compiledContract, wallet.connectedApi],
   );
 
   const readLedger = useCallback(async (): Promise<SurveyLedgerView | null> => {
-    if (!contractAddress) return null;
-    const providers = await getProviders();
-    const state = await providers.publicDataProvider.queryContractState(contractAddress);
-    if (!state) return null;
-    const ledgerState = SurveyContract.ledger(state.data);
-    return {
-      tallyA: ledgerState.tallyA,
-      tallyB: ledgerState.tallyB,
-      tallyC: ledgerState.tallyC,
-      responseCount: ledgerState.responseCount,
-      revealThreshold: ledgerState.revealThreshold,
-      revealed: ledgerState.responseCount >= ledgerState.revealThreshold,
-    };
-  }, [contractAddress, getProviders]);
+    if (!contractAddress || !wallet.connectedApi) return null;
+    return readSurveyLedger(wallet.connectedApi, contractAddress);
+  }, [contractAddress, wallet.connectedApi]);
 
   // Deploys a brand new survey: generates a fresh access key for every
   // member slot, hashes each one the same way the contract does, and
   // deploys with those hashes baked in. The keys themselves never leave
-  // this browser except in the list handed back to the caller — nothing
-  // is sent anywhere but the 8 hashes.
+  // this browser except in the list handed back to the caller, nothing
+  // is sent anywhere but the hashes.
   const createSurvey = useCallback(
     async (memberCount: number, revealThreshold: number): Promise<{ contractAddress: string; memberKeys: string[] } | null> => {
+      if (!wallet.connectedApi) {
+        setError("Connect your wallet first.");
+        return null;
+      }
       setDeploying(true);
       setError(null);
       try {
-        const providers = await getProviders();
+        const providers = await buildProviders(wallet.connectedApi);
         const realKeys = Array.from({ length: memberCount }, () => crypto.getRandomValues(new Uint8Array(32)));
         const paddingKeys = Array.from({ length: ROSTER_SIZE - memberCount }, () => crypto.getRandomValues(new Uint8Array(32)));
         const allKeys = [...realKeys, ...paddingKeys];
@@ -275,25 +301,68 @@ export function useSurvey(initialContractAddress?: string) {
         setDeploying(false);
       }
     },
-    [compiledContract, getProviders],
+    [compiledContract, wallet.connectedApi],
   );
 
   return {
-    status,
-    address,
-    error,
+    contractAddress,
+    setContractAddress,
     busyOption,
     deploying,
+    error,
     lastResult,
     memberKeyHex,
     hasResponded,
     setMemberKey,
-    connect,
-    disconnect,
     respond,
     readLedger,
     createSurvey,
-    contractAddress,
-    networkId: NETWORK_ID,
   };
+}
+
+// ---------- Local history (this browser only) ----------
+
+export interface CreatedSurveyRecord {
+  address: string;
+  question: string;
+  options: [string, string, string];
+  people: number;
+  threshold: number;
+  createdAt: string;
+}
+
+export interface AnsweredSurveyRecord {
+  address: string;
+  question: string;
+  answeredAt: string;
+}
+
+const CREATED_HISTORY_KEY = "unsourced:history:created";
+const ANSWERED_HISTORY_KEY = "unsourced:history:answered";
+
+function readHistory<T>(key: string): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getCreatedHistory(): CreatedSurveyRecord[] {
+  return readHistory<CreatedSurveyRecord>(CREATED_HISTORY_KEY);
+}
+
+export function recordCreatedSurvey(record: CreatedSurveyRecord): void {
+  const list = [record, ...getCreatedHistory().filter((r) => r.address !== record.address)];
+  localStorage.setItem(CREATED_HISTORY_KEY, JSON.stringify(list));
+}
+
+export function getAnsweredHistory(): AnsweredSurveyRecord[] {
+  return readHistory<AnsweredSurveyRecord>(ANSWERED_HISTORY_KEY);
+}
+
+export function recordAnsweredSurvey(record: AnsweredSurveyRecord): void {
+  const list = [record, ...getAnsweredHistory().filter((r) => r.address !== record.address)];
+  localStorage.setItem(ANSWERED_HISTORY_KEY, JSON.stringify(list));
 }

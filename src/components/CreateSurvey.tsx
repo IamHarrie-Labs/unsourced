@@ -1,139 +1,227 @@
 import { useState } from "react";
-import type { useSurvey } from "../hooks/useSurvey";
-import { WalletConnect } from "./WalletConnect";
+import type { Wallet } from "../hooks/useSurvey";
+import { useSurveyContract, recordCreatedSurvey } from "../hooks/useSurvey";
 
-type Props = ReturnType<typeof useSurvey>;
+interface Props {
+  wallet: Wallet;
+  survey: ReturnType<typeof useSurveyContract>;
+  onDeployed: (args: { address: string; question: string; options: [string, string, string] }) => void;
+}
 
-export function CreateSurvey(props: Props) {
-  const { status, error, deploying, connect, disconnect, address, createSurvey } = props;
+interface DoneState {
+  address: string;
+  question: string;
+  options: [string, string, string];
+  memberKeys: string[];
+}
+
+export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
+  const { deploying, error, createSurvey } = survey;
   const [question, setQuestion] = useState("");
-  const [memberCount, setMemberCount] = useState(5);
+  const [oA, setOA] = useState("");
+  const [oB, setOB] = useState("");
+  const [oC, setOC] = useState("");
+  const [people, setPeople] = useState(5);
   const [threshold, setThreshold] = useState(3);
-  const [result, setResult] = useState<{ contractAddress: string; memberKeys: string[]; question: string } | null>(null);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [stage, setStage] = useState<"deploy" | "hashing" | "deploying">("deploy");
+  const [done, setDone] = useState<DoneState | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const canCreate = status === "connected" && question.trim().length > 0 && !deploying;
+  const canDeploy = wallet.status === "connected" && question.trim().length > 0 && oA.trim() && oB.trim() && oC.trim() && !deploying;
 
-  async function handleCreate() {
-    const outcome = await createSurvey(memberCount, threshold);
-    if (outcome) setResult({ ...outcome, question: question.trim() });
+  async function handleDeploy() {
+    setStage("hashing");
+    const options: [string, string, string] = [oA.trim(), oB.trim(), oC.trim()];
+    setStage("deploying");
+    const outcome = await createSurvey(people, threshold);
+    if (outcome) {
+      const record = { address: outcome.contractAddress, question: question.trim(), options, memberKeys: outcome.memberKeys };
+      setDone(record);
+      recordCreatedSurvey({
+        address: record.address,
+        question: record.question,
+        options: record.options,
+        people,
+        threshold,
+        createdAt: new Date().toISOString(),
+      });
+      onDeployed({ address: record.address, question: record.question, options: record.options });
+    }
+    setStage("deploy");
   }
 
-  function copy(text: string, mark: () => void) {
-    navigator.clipboard.writeText(text).then(mark);
+  function shareLink(record: DoneState): string {
+    const params = new URLSearchParams({
+      survey: record.address,
+      q: record.question,
+      a: record.options[0],
+      b: record.options[1],
+      c: record.options[2],
+    });
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
   }
 
-  if (result) {
-    const link = `${window.location.origin}/?survey=${result.contractAddress}&q=${encodeURIComponent(result.question)}`;
+  function resetCreate() {
+    setDone(null);
+    setQuestion("");
+    setOA("");
+    setOB("");
+    setOC("");
+    setCopied(false);
+  }
+
+  if (stage === "hashing" || stage === "deploying" || deploying) {
     return (
-      <div className="survey-panel">
-        <header>
-          <h1>Your survey is live</h1>
-        </header>
+      <div>
+        <div className="page-title">Deploying</div>
+        <div className="stage-list">
+          <StageRow label="Generating your keys" state={stage === "hashing" ? "active" : "done"} />
+          <StageRow label="Deploying the contract" state={stage === "deploying" ? "active" : stage === "hashing" ? "pending" : "done"} />
+        </div>
+      </div>
+    );
+  }
 
-        <p className="survey-question">
-          Send the link to your group, then give each person exactly one key below. Anyone holding a key on this
-          list can answer once, in complete privacy — including from you.
-        </p>
+  if (done) {
+    const link = shareLink(done);
+    return (
+      <div>
+        <div className="page-title">Survey is live</div>
+        <div className="page-sub" style={{ maxWidth: "62ch" }}>
+          Send each person the link plus one key. Each key works once. Keys are shown here only now, the app
+          cannot recover them later.
+        </div>
 
-        <div className="create-field">
-          <label>Link to share</label>
-          <div className="copy-row">
-            <input type="text" readOnly value={link} onClick={(e) => e.currentTarget.select()} />
+        <div className="panel-box">
+          <div className="panel-box-title">Shareable link</div>
+          <div className="link-row">
+            <span>{link}</span>
             <button
-              onClick={() => copy(link, () => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 1500); })}
+              className="btn-ghost-yellow"
+              onClick={() => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600); })}
             >
-              {linkCopied ? "Copied" : "Copy"}
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
         </div>
 
-        <div className="create-field">
-          <label>Keys — one per person, never reuse a line</label>
-          <div className="key-list">
-            {result.memberKeys.map((key, i) => (
-              <div className="copy-row" key={key}>
-                <input type="text" readOnly value={key} onClick={(e) => e.currentTarget.select()} />
-                <button
-                  onClick={() => copy(key, () => { setCopiedIndex(i); setTimeout(() => setCopiedIndex(null), 1500); })}
-                >
-                  {copiedIndex === i ? "Copied" : `Copy #${i + 1}`}
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="key-box">
+          <div className="key-box-title">Single-use keys</div>
+          {done.memberKeys.map((key, i) => (
+            <KeyRow key={key} n={String(i + 1).padStart(2, "0")} value={key} />
+          ))}
         </div>
 
-        <p className="circuit-hint">
-          This is the only time these keys are shown. Nothing is saved anywhere — if you navigate away without
-          copying them, they're gone for good and you'd need to start a new survey.
-        </p>
+        <div className="action-row">
+          <button className="btn-yellow" onClick={() => onDeployed({ address: done.address, question: done.question, options: done.options })}>
+            See results
+          </button>
+          <button className="btn-outline-dark" onClick={resetCreate}>
+            New survey
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="survey-panel">
-      <header>
-        <h1>Start a survey</h1>
-        <WalletConnect status={status} address={address} error={error} connect={connect} disconnect={disconnect} />
-      </header>
-
-      <p className="survey-question">
-        Ask your group something and get an honest answer back — nobody, including you, will be able to tell who
-        picked what.
-      </p>
-
-      <div className="create-field">
-        <label>What do you want to ask?</label>
-        <input
-          type="text"
-          placeholder={'e.g. "How\'s this cycle going?"'}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
+    <div>
+      <div className="page-title">New survey</div>
+      <div className="page-sub">
+        Everything here except the question wording ends up on-chain as numbers and hashes. The wording stays in
+        the app.
       </div>
 
-      <div className="create-field create-field--row">
+      <div className="field-group">
         <div>
-          <label>How many people?</label>
+          <label className="field-label">Question</label>
           <input
-            type="number"
-            min={1}
-            max={8}
-            value={memberCount}
-            onChange={(e) => {
-              const n = Math.min(8, Math.max(1, Number(e.target.value) || 1));
-              setMemberCount(n);
-              if (threshold > n) setThreshold(n);
-            }}
+            className="field-big-input"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="How is the sprint going?"
           />
         </div>
+
         <div>
-          <label>Answers needed before results show</label>
-          <input
-            type="number"
-            min={1}
-            max={memberCount}
-            value={threshold}
-            onChange={(e) => setThreshold(Math.min(memberCount, Math.max(1, Number(e.target.value) || 1)))}
-          />
+          <label className="field-label">Three options</label>
+          <div className="option-rows">
+            <OptionInput letter="A" value={oA} onChange={setOA} placeholder="Fine" />
+            <OptionInput letter="B" value={oB} onChange={setOB} placeholder="Rough" />
+            <OptionInput letter="C" value={oC} onChange={setOC} placeholder="Great" />
+          </div>
+        </div>
+
+        <div className="chip-row-group">
+          <div>
+            <label className="field-label">People you're asking</label>
+            <div className="chip-row">
+              {Array.from({ length: 8 }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  className={n === people ? "chip chip--active" : "chip"}
+                  onClick={() => {
+                    setPeople(n);
+                    if (threshold > n) setThreshold(n);
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="field-label">Show results after</label>
+            <div className="chip-row">
+              {Array.from({ length: people }, (_, i) => i + 1).map((n) => (
+                <button key={n} className={n === threshold ? "chip chip--active" : "chip"} onClick={() => setThreshold(n)}>
+                  {n}
+                </button>
+              ))}
+            </div>
+            <div className="chip-hint">answers arrive</div>
+          </div>
+        </div>
+
+        <div className="deploy-row">
+          <button className="btn-yellow" disabled={!canDeploy} onClick={handleDeploy}>
+            Deploy survey
+          </button>
+          <span className="deploy-note">One transaction · Preview network</span>
         </div>
       </div>
 
-      <p className="circuit-hint">
-        Up to 8 people for now. A higher number here means more answers come in before anyone can see how the
-        results are shaping up — that's what keeps a handful of early answers from being traceable to specific
-        people.
-      </p>
+      {wallet.status !== "connected" && <p className="answer-locked-hint">Connect your wallet to deploy, it pays the small network fee.</p>}
+      {error && <p className="field-error">{error}</p>}
+    </div>
+  );
+}
 
-      <button className="create-button" disabled={!canCreate} onClick={handleCreate}>
-        {deploying ? "Creating your survey…" : "Create survey"}
-      </button>
+function OptionInput({ letter, value, onChange, placeholder }: { letter: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <div className="option-row">
+      <span className="option-row-letter">{letter}</span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
 
-      {status !== "connected" && <p className="circuit-hint">Connect your wallet first — it pays the small network fee to set this up.</p>}
-      {error && <p className="circuit-error">{error}</p>}
+function KeyRow({ n, value }: { n: string; value: string }) {
+  return (
+    <div className="key-row">
+      <span className="key-row-n">{n}</span>
+      <span className="key-row-key">{value}</span>
+    </div>
+  );
+}
+
+function StageRow({ label, state }: { label: string; state: "pending" | "active" | "done" }) {
+  const mark = state === "done" ? "✓" : state === "active" ? "·" : " ";
+  const color = state === "done" ? "var(--yellow)" : state === "active" ? "var(--cream)" : "#4a4a46";
+  return (
+    <div className="stage-row" style={{ color }}>
+      <span className="stage-mark">{mark}</span>
+      <span className="stage-label">{label}</span>
     </div>
   );
 }

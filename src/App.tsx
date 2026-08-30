@@ -1,54 +1,47 @@
-import { useEffect, useState } from "react";
-import { useSurvey, type SurveyLedgerView } from "./hooks/useSurvey";
-import { SurveyPanel } from "./components/SurveyPanel";
-import { CreateSurvey } from "./components/CreateSurvey";
+import { useState } from "react";
+import { useWallet } from "./hooks/useSurvey";
+import { Landing } from "./pages/Landing";
+import { Docs } from "./pages/Docs";
+import { AppShell } from "./pages/AppShell";
 import "./App.css";
 
-// A link with ?survey=<address> is someone joining an existing survey.
-// No link means there's nothing to join yet — show the create flow instead.
+type Page = "landing" | "app" | "docs";
+
 const params = new URLSearchParams(window.location.search);
 const SURVEY_FROM_LINK = params.get("survey") ?? undefined;
 const QUESTION_FROM_LINK = params.get("q") ?? undefined;
-
-function RespondView({ contractAddress, question }: { contractAddress: string; question?: string }) {
-  const survey = useSurvey(contractAddress);
-  const [ledger, setLedger] = useState<SurveyLedgerView | null>(null);
-
-  useEffect(() => {
-    if (survey.status !== "connected") return;
-    let cancelled = false;
-    survey.readLedger().then((view) => {
-      if (!cancelled) setLedger(view);
-    });
-    return () => {
-      cancelled = true;
-    };
-    // Refetch after any attempt settles — a rejected answer can still mean
-    // an earlier attempt actually landed, so re-read on error too.
-  }, [survey.status, survey.lastResult, survey.error]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <main>
-      <SurveyPanel {...survey} ledger={ledger} question={question} />
-      <p className="network-note">
-        Network: {survey.networkId}
-        {survey.contractAddress ? ` · Contract: ${survey.contractAddress.slice(0, 12)}…` : ""}
-      </p>
-    </main>
-  );
-}
-
-function CreateView() {
-  const survey = useSurvey();
-  return (
-    <main>
-      <CreateSurvey {...survey} />
-    </main>
-  );
-}
+const OPTIONS_FROM_LINK: [string, string, string] | undefined =
+  params.get("a") && params.get("b") && params.get("c")
+    ? [params.get("a")!, params.get("b")!, params.get("c")!]
+    : undefined;
 
 function App() {
-  return <div className="app">{SURVEY_FROM_LINK ? <RespondView contractAddress={SURVEY_FROM_LINK} question={QUESTION_FROM_LINK} /> : <CreateView />}</div>;
+  const wallet = useWallet();
+  const [page, setPage] = useState<Page>(SURVEY_FROM_LINK ? "app" : "landing");
+
+  async function enterApp() {
+    if (wallet.status !== "connected") await wallet.connect();
+    setPage("app");
+  }
+
+  if (page === "docs") {
+    return <Docs onOpenApp={enterApp} onGoHome={() => setPage("landing")} />;
+  }
+
+  if (page === "app") {
+    return (
+      <AppShell
+        wallet={wallet}
+        onGoHome={() => setPage("landing")}
+        onOpenDocs={() => setPage("docs")}
+        initialSurveyAddress={SURVEY_FROM_LINK}
+        initialQuestion={QUESTION_FROM_LINK}
+        initialOptions={OPTIONS_FROM_LINK}
+      />
+    );
+  }
+
+  return <Landing onEnterApp={enterApp} onOpenDocs={() => setPage("docs")} />;
 }
 
 export default App;
