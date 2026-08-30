@@ -34,7 +34,7 @@ async function main() {
     const walletCtx = await createWallet({ network, networkConfig, seed: SEED });
     const restoredCount = Object.values(walletCtx.restored).filter(Boolean).length;
     if (restoredCount > 0) {
-      console.log(`  Restored ${restoredCount}/3 child wallets from .midnight-wallet-state — sync will resume from saved point.`);
+      console.log(`  Restored ${restoredCount}/3 child wallets from .midnight-wallet-state, sync will resume from saved point.`);
     }
 
     console.log('  Syncing with network...');
@@ -64,7 +64,7 @@ async function main() {
     if (tNightBalance === 0n) {
       if (network === 'undeployed') {
         console.log('  ⚠ Wallet has no tNight. Make sure the local devnet is running');
-        console.log('     (npm run setup) — the genesis seed is pre-funded by the dev preset.\n');
+        console.log('     (npm run setup), the genesis seed is pre-funded by the dev preset.\n');
       } else if (networkConfig.faucet) {
         console.log(`  ⚠ Wallet has no tNight. Fund it from the faucet:`);
         console.log(`     ${networkConfig.faucet}`);

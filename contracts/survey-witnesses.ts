@@ -1,4 +1,4 @@
-// Private state for the survey — one member's secret key. Same shape as
+// Private state for the survey, one member's secret key. Same shape as
 // the counter's witnesses.ts, kept as a separate file because the two
 // contracts have separate private state and separate compiled artifacts.
 

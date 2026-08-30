@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/IamHarrie-Labs/unsourced/actions/workflows/ci.yml/badge.svg)](https://github.com/IamHarrie-Labs/unsourced/actions/workflows/ci.yml)
 
-> A survey where every response is provably from an eligible member — and nobody, including whoever ran it, can tell which one.
+> A survey where every response is provably from an eligible member, and nobody, including whoever ran it, can tell which one.
 
 ## Live Demo
 
 https://unsourced.vercel.app
 
-Connect Lace (set to the Preview network) and click "Create survey" to start your own — no CLI, no setup file, just a form and a button. You'll get a shareable link and a set of one-time access keys, one per person you're asking. Send the link plus one key to each person; they open the link, paste their key, and answer. Try responding yourself with [this pre-made demo survey](https://unsourced.vercel.app/?survey=d2549a8f19f9bea396225d835cd54b5df552acf12649bb64260ee6dcad8e6765&q=How%27s%20this%20cycle%20going%3F) if you just want to see the respond side without creating one.
+Connect Lace (set to the Preview network) and click "Create survey" to start your own: no CLI, no setup file, just a form and a button. You'll get a shareable link and a set of one-time access keys, one per person you're asking. Send the link plus one key to each person; they open the link, paste their key, and answer. Try responding yourself with [this pre-made demo survey](https://unsourced.vercel.app/?survey=d2549a8f19f9bea396225d835cd54b5df552acf12649bb64260ee6dcad8e6765&q=How%27s%20this%20cycle%20going%3F) if you just want to see the respond side without creating one.
 
 ## Contract address
 
@@ -16,19 +16,19 @@ Connect Lace (set to the Preview network) and click "Create survey" to start you
 |---------|---------|
 | Preview | d2549a8f19f9bea396225d835cd54b5df552acf12649bb64260ee6dcad8e6765 |
 
-That's the address of the demo survey linked above — every survey created through the app gets its own fresh address the same way.
+That's the address of the demo survey linked above; every survey created through the app gets its own fresh address the same way.
 
-**A note on the network:** the live demo runs against Preview instead of Preprod. Preprod's own RPC/indexer has been down every time I've checked over several weeks — every deploy attempt hangs indefinitely at wallet sync. Midnight's own forum confirms Preprod is mid-reset for mainnet prep and "intermittently unavailable during testing." Preview is fully functional and this is the same contract, same circuits, same frontend — only the network target differs.
+**A note on the network:** the live demo runs against Preview instead of Preprod. Preprod's own RPC/indexer has been down every time I've checked over several weeks, every deploy attempt hangs indefinitely at wallet sync. Midnight's own forum confirms Preprod is mid-reset for mainnet prep and "intermittently unavailable during testing." Preview is fully functional and this is the same contract, same circuits, same frontend, only the network target differs.
 
 ## What this does
 
-Anyone can start a survey: pick a question, say how many people you're asking (up to 8 for now), and how many answers should come in before you can see results. The app generates one access key per person and deploys a contract with only their key's hash written on-chain — never the key itself.
+Anyone can start a survey: pick a question, say how many people you're asking (up to 8 for now), and how many answers should come in before you can see results. The app generates one access key per person and deploys a contract with only their key's hash written on-chain, never the key itself.
 
 To answer, a person pastes the key they were given. The app proves their key matches one of the hashes on that survey's roster, without ever saying which one. That same hash doubles as a one-time-use marker: answer once, and the contract remembers, without remembering who you are.
 
 No individual answer is ever stored on its own. Answering just adds one to a running tally for whichever option was picked, so there's nothing on the ledger to unlink a person from an answer, because the two were never linked in the first place.
 
-This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymous feedback tool for groups that already have a roster — teams, classes, DAOs — where the value isn't hiding from a stranger, it's hiding from the person who'll actually read the results.
+This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymous feedback tool for groups that already have a roster (teams, classes, DAOs) where the value isn't hiding from a stranger, it's hiding from the person who'll actually read the results.
 
 ## Privacy model
 
@@ -36,17 +36,17 @@ This is the build of the idea proposed in [PROPOSAL.md](PROPOSAL.md): an anonymo
 
 - The 8 member commitments, published once at deploy time.
 - The response count and the three tally totals.
-- That some committed member responded, and which of the three tallies grew — never which member.
+- That some committed member responded, and which of the three tallies grew, never which member.
 
 **What an on-chain observer cannot learn:**
 
-- Any member's secret key. It's a private witness, read only inside a proof generated on that member's own machine — never in the transaction, never in the ledger.
+- Any member's secret key. It's a private witness, read only inside a proof generated on that member's own machine, never in the transaction, never in the ledger.
 - Which of the 8 members submitted any given response.
-- Whether two responses came from the same member or two different ones (impossible anyway — one response per member is enforced on-chain).
+- Whether two responses came from the same member or two different ones (impossible anyway: one response per member is enforced on-chain).
 
 **What is proved without being revealed:** that the caller holds a key on this survey's roster, and that this key hasn't responded before. That's the entire access control and anti-double-voting mechanism, and neither ever puts a key on chain.
 
-Results stay hidden in the frontend until the response count reaches a threshold set at deploy time (3, for the live demo). That's a display choice, not a cryptographic seal — the tallies are always on the public ledger, so anyone querying the indexer directly could read them early. The point of the threshold is that a handful of early answers can't be pinned on individuals by process of elimination; it doesn't add a second layer of on-chain hiding beyond the anonymity that already exists between commitment and vote.
+Results stay hidden in the frontend until the response count reaches a threshold set at deploy time (3, for the live demo). That's a display choice, not a cryptographic seal: the tallies are always on the public ledger, so anyone querying the indexer directly could read them early. The point of the threshold is that a handful of early answers can't be pinned on individuals by process of elimination, and it doesn't add a second layer of on-chain hiding beyond the anonymity that already exists between commitment and vote.
 
 ## Tech stack
 
@@ -56,7 +56,7 @@ Midnight network, Compact, Midnight.js SDK, React + Vite, Lace wallet, Node.js v
 
 - Node.js v22
 - Docker Desktop, running
-- The Compact toolchain (see setup below — on Windows this needs WSL2)
+- The Compact toolchain (see setup below, on Windows this needs WSL2)
 - The Lace wallet browser extension, with a Preview account
 
 ## Setup
@@ -105,17 +105,17 @@ Every push and pull request to `main` runs [`.github/workflows/ci.yml`](.github/
 npm run dev
 ```
 
-Opens at `http://localhost:5173`. `VITE_NETWORK_ID` and `VITE_SURVEY_CONTRACT_ADDRESS` in `.env` control which network and contract the UI points at — make sure Lace is unlocked and set to the matching network.
+Opens at `http://localhost:5173`. `VITE_NETWORK_ID` and `VITE_SURVEY_CONTRACT_ADDRESS` in `.env` control which network and contract the UI points at. Make sure Lace is unlocked and set to the matching network.
 
 ## Create a survey from the command line
 
-The app itself is the normal way to create a survey — this is only for scripting or testing without a browser:
+The app itself is the normal way to create a survey; this is only for scripting or testing without a browser:
 
 ```
 npm run deploy -- --network preview
 ```
 
-Generates 8 fresh member keys, deploys with their commitments baked in, and writes the keys to a local `.survey-roster-keys.<network>.json` (gitignored — never commit it). Distribute one key per real member out of band, then delete the unused ones from your copy.
+Generates 8 fresh member keys, deploys with their commitments baked in, and writes the keys to a local `.survey-roster-keys.<network>.json` (gitignored, never commit it). Distribute one key per real member out of band, then delete the unused ones from your copy.
 
 ## Demo video
 

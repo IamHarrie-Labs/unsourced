@@ -216,7 +216,7 @@ export const GENESIS_SEED = '000000000000000000000000000000000000000000000000000
 // restores the identical wallet in Lace and vice versa.
 //
 // IMPORTANT: derivation must stay mnemonicToSeed (64-byte seed). Do NOT
-// switch to mnemonicToEntropy — it also "works" but derives a different
+// switch to mnemonicToEntropy, it also "works" but derives a different
 // wallet from the same words, silently breaking Lace compatibility.
 
 export function normalizeMnemonic(mnemonic: string): string {
@@ -266,7 +266,7 @@ export function getOrCreateWallet(network: NetworkId, opts: SeedOptions = {}): W
   const envMnemonic = env.MIDNIGHT_WALLET_MNEMONIC;
   if (envSeed && envMnemonic) {
     throw new Error(
-      'Both MIDNIGHT_WALLET_SEED and MIDNIGHT_WALLET_MNEMONIC are set — unset one; they would select different wallets.',
+      'Both MIDNIGHT_WALLET_SEED and MIDNIGHT_WALLET_MNEMONIC are set, unset one; they would select different wallets.',
     );
   }
   if (envSeed) {
@@ -277,7 +277,7 @@ export function getOrCreateWallet(network: NetworkId, opts: SeedOptions = {}): W
     if (!SEED_HEX_RE.test(hex)) {
       throw new Error(
         'MIDNIGHT_WALLET_SEED must be 32-128 hex characters (16-64 whole bytes). ' +
-          'A Lace-compatible BIP-39 seed is 128 hex characters — or set MIDNIGHT_WALLET_MNEMONIC to pass the phrase directly.',
+          'A Lace-compatible BIP-39 seed is 128 hex characters, or set MIDNIGHT_WALLET_MNEMONIC to pass the phrase directly.',
       );
     }
     return { seed: hex, mnemonic: null, created: false };
@@ -335,7 +335,7 @@ export function formatWalletBackupNotice(
     '',
     `    ${wallet.mnemonic}`,
     '',
-    '  Write this phrase down — anyone holding it controls the wallet. It also',
+    '  Write this phrase down, anyone holding it controls the wallet. It also',
     `  restores the same wallet in Lace, and is saved to ${STATE_FILE_NAME} (gitignored).`,
     '',
   ].join('\n');
@@ -415,7 +415,7 @@ function cliMain(argv: string[]): number {
   if (candidate !== 'undeployed') {
     const seed = loadState()?.wallets?.[candidate]?.seed;
     if (!seed) {
-      process.stdout.write(`Wallet not yet generated — run \`npm run setup\` to fund and deploy.\n`);
+      process.stdout.write(`Wallet not yet generated, run \`npm run setup\` to fund and deploy.\n`);
     }
   }
   return 0;

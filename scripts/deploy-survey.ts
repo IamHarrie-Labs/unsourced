@@ -5,8 +5,8 @@
  * Generates 8 fresh secret keys for the roster, computes their commitments
  * off-chain (the same persistentHash the contract itself runs), and deploys
  * with those commitments baked in. The 8 secrets are written to a local,
- * gitignored file so the organizer can hand one to each real member —
- * they never touch the deploying wallet's own seed and never get committed.
+ * gitignored file so the organizer can hand one to each real member.
+ * They never touch the deploying wallet's own seed and never get committed.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -93,7 +93,7 @@ function generateRoster(): { secretKeys: Uint8Array[]; commitments: Uint8Array[]
 
 const { secretKeys, commitments } = generateRoster();
 
-// The deploying wallet doesn't need a seat on its own roster — it deploys the
+// The deploying wallet doesn't need a seat on its own roster, it deploys the
 // contract, it doesn't have to be a respondent. All 8 slots go to real members.
 const witnesses = {
   secretKey: ({ privateState }: any) => [privateState, privateState.secretKey],
@@ -152,7 +152,7 @@ async function main() {
   const walletCtx = await createWallet({ network, networkConfig, seed: SEED });
   const restoredCount = Object.values(walletCtx.restored).filter(Boolean).length;
   if (restoredCount > 0) {
-    console.log(`  Restored ${restoredCount}/3 child wallets from .midnight-wallet-state — sync will resume from saved point.`);
+    console.log(`  Restored ${restoredCount}/3 child wallets from .midnight-wallet-state, sync will resume from saved point.`);
   }
 
   console.log('  Syncing with network...');
@@ -313,10 +313,10 @@ async function main() {
 
       if (isSubmissionDropped && !isDustShortage) {
         if (attempt < MAX_RETRIES) {
-          console.log(`  ⏳ Connection dropped during submission (attempt ${attempt}/${MAX_RETRIES}) — it may have landed anyway, checking on retry in ${RETRY_DELAY_MS / 1000}s...`);
+          console.log(`  ⏳ Connection dropped during submission (attempt ${attempt}/${MAX_RETRIES}), it may have landed anyway, checking on retry in ${RETRY_DELAY_MS / 1000}s...`);
           await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
         } else {
-          console.log(`  ❌ Submission kept dropping after ${MAX_RETRIES} retries. Check the wallet balance — the transaction may still have landed.`);
+          console.log(`  ❌ Submission kept dropping after ${MAX_RETRIES} retries. Check the wallet balance, the transaction may still have landed.`);
           await walletCtx.wallet.stop();
           process.exit(1);
         }
@@ -344,7 +344,7 @@ async function main() {
   console.log(`  Contract Address: ${contractAddress}\n`);
 
   // Roster secrets never go in .midnight-state.json (that file gets read for
-  // wallet identity elsewhere) — separate file, same gitignore treatment.
+  // wallet identity elsewhere), separate file, same gitignore treatment.
   const rosterPath = path.resolve(__dirname, '..', `${ROSTER_KEYS_FILE_BASE}.${network}.json`);
   fs.writeFileSync(
     rosterPath,
@@ -360,7 +360,7 @@ async function main() {
     )}\n`,
     { mode: 0o600 },
   );
-  console.log(`  Roster secrets written to ${path.basename(rosterPath)} — distribute one to each real member, then delete unused entries.\n`);
+  console.log(`  Roster secrets written to ${path.basename(rosterPath)}, distribute one to each real member, then delete unused entries.\n`);
 
   recordDeployment(network, contractAddress, address.toString());
   console.log('  Saved to .midnight-state.json\n');

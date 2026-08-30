@@ -3,14 +3,14 @@ pragma language_version 0.23;
 import CompactStandardLibrary;
 
 // A survey with a fixed, pre-committed roster of 8 members. Each member
-// gets a secret key generated for them off-chain and never shares it —
+// gets a secret key generated for them off-chain and never shares it,
 // only its hash goes on the roster. Responding proves "I hold a key on
 // this roster" without saying which one, and the same commitment doubles
 // as its own one-time nullifier: once it's been used to respond, it can't
 // be used again, but nothing about it points back to a specific member.
 //
 // The three response options are just tally counters. No individual
-// response is ever stored — only which bucket grew by one — so there is
+// response is ever stored, only which bucket grew by one, so there is
 // nothing on the ledger to unlink from a person, because it was never
 // linked in the first place.
 

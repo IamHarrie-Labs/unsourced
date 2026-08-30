@@ -94,7 +94,7 @@ describe("privacy", () => {
 
   it("records which commitment responded without recording which option it picked", () => {
     // The only per-member trace on the ledger is the commitment landing in
-    // usedCommitments — nothing ties a commitment back to A, B, or C, since
+    // usedCommitments, nothing ties a commitment back to A, B, or C, since
     // that link is never constructed inside the circuit.
     const sim = freshSurvey();
     const before = sim.getLedger();
