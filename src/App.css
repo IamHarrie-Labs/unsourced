@@ -152,7 +152,11 @@ button {
 }
 
 .landing-hero {
-  padding: clamp(72px, 14vw, 180px) clamp(16px, 5vw, 56px) clamp(64px, 10vw, 120px);
+  min-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(96px, 18vw, 220px) clamp(16px, 5vw, 56px) clamp(96px, 16vw, 200px);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -221,15 +225,39 @@ button {
   border-bottom: 2px solid var(--ink);
   background: var(--ink);
   color: var(--yellow);
-  padding: 14px clamp(16px, 5vw, 56px);
   font-family: "IBM Plex Mono", monospace;
   font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  overflow: hidden;
+}
+
+.landing-strip-track {
   display: flex;
-  gap: 28px;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  width: max-content;
+  animation: strip-scroll 22s linear infinite;
+}
+
+.landing-strip-set {
+  display: flex;
+  gap: 56px;
+  padding: 14px clamp(28px, 5vw, 56px) 14px 0;
+  white-space: nowrap;
+}
+
+@keyframes strip-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-strip-track {
+    animation: none;
+  }
 }
 
 .section {

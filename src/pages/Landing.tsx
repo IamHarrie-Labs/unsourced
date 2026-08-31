@@ -57,10 +57,10 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
       </div>
 
       <div className="landing-strip">
-        <span>Up to 8 people per survey</span>
-        <span>One answer each</span>
-        <span>Results hidden until your threshold</span>
-        <span>No accounts, no emails</span>
+        <div className="landing-strip-track">
+          <StripItems />
+          <StripItems hidden />
+        </div>
       </div>
 
       <div id="how" className="section">
@@ -95,8 +95,8 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
               <div className="ledger-col-title">Public</div>
               <div>
                 <div className="ledger-item">The eight key hashes, written once when the survey is made.</div>
-                <div className="ledger-item">How many people have answered, and the three totals.</div>
-                <div className="ledger-item">That someone on the list answered, and which total went up.</div>
+                <div className="ledger-item">How many people have answered, and the tally for each question.</div>
+                <div className="ledger-item">That someone on the list answered, and which tally went up.</div>
               </div>
             </div>
             <div>
@@ -137,6 +137,17 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
           <span style={{ opacity: 0.6 }}>Preview network</span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function StripItems({ hidden }: { hidden?: boolean }) {
+  return (
+    <div className="landing-strip-set" aria-hidden={hidden || undefined}>
+      <span>Up to 8 people per survey</span>
+      <span>One answer each</span>
+      <span>Results hidden until your threshold</span>
+      <span>No accounts, no emails</span>
     </div>
   );
 }
