@@ -26,13 +26,14 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
           <div>
             <div className="docs-heading">What it is</div>
             <p className="docs-p">
-              Unsourced is an anonymous survey for a group you already know: a team, a class, a DAO. You pick who
-              can answer, hand each of them a single-use key, and ask up to four questions. Everyone answers once,
-              covering every question in a single go. Afterwards you can see the totals, and nobody can see who
-              chose what, including you.
+              Unsourced is an anonymous survey for a group you already know, a team, a class, a DAO. You decide who
+              gets to answer, hand each person a single-use key, and ask up to four questions. Everyone answers
+              once, all four questions in one go if there are that many. Afterward you get the totals, and nobody,
+              including you, can see who picked what.
             </p>
             <p className="docs-p">
-              The value isn't hiding from a stranger. It's hiding from the person who'll actually read the results.
+              The point isn't hiding from a stranger, it's hiding from whoever's actually going to read the
+              results.
             </p>
           </div>
 
@@ -64,18 +65,18 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               </div>
             </div>
             <div className="docs-note">
-              Keys are shown once, at deploy time. The app cannot recover them. If you lose one before sending it,
-              that seat simply goes unused.
+              Keys are shown once, right when you deploy. The app has no way to get them back after that, so if you
+              lose one before sending it out, that seat just goes unused.
             </div>
           </div>
 
           <div>
             <div className="docs-heading">Answering one</div>
             <p className="docs-p">
-              Open the link, paste your key, pick an option for each question. Your browser builds one proof that
-              your key is on that survey's list, without revealing which, covering every question in a single
-              transaction. Each tally you picked goes up by one and your key is marked as spent. You cannot answer
-              twice, and you cannot change your answer.
+              Open the link, paste your key, and pick an option for each question. Your browser builds one proof
+              that your key is somewhere on that survey's list, without saying where, and sends every answer in a
+              single transaction. Each tally you picked goes up by one, and your key gets marked as spent. There's
+              no answering twice, and no changing your mind afterward.
             </p>
           </div>
 
@@ -104,15 +105,16 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               </div>
             </div>
             <p className="docs-p" style={{ marginTop: 24 }}>
-              What is proved without being revealed: that the caller holds a key on this survey's roster, and that
-              this key hasn't responded before. That's the entire access control and anti-double-voting mechanism,
-              and neither ever puts a key on chain.
+              What gets proved without being revealed: that whoever's calling holds a key on this survey's roster,
+              and that the key hasn't been used yet. That's the whole access control and anti-double-voting system,
+              and neither check ever puts a key on chain.
             </p>
             <p className="docs-p">
-              Results stay hidden in the frontend until the response count reaches a threshold set at deploy time.
-              That's a display choice, not a cryptographic seal: the tallies are always on the public ledger, so
-              anyone querying the indexer directly could read them early. The point of the threshold is that a
-              handful of early answers can't be pinned on individuals by process of elimination.
+              Results stay hidden in the app until the response count hits a threshold set when the survey was
+              deployed. That's just a display choice though, not real cryptographic sealing, the tallies sit on the
+              public ledger the whole time, so anyone querying the indexer directly could read them early. The
+              threshold exists so a handful of early answers can't be pinned on specific people just by process of
+              elimination.
             </p>
           </div>
 
@@ -133,9 +135,9 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               the same way.
             </p>
             <p className="docs-p" style={{ marginTop: 14 }}>
-              A note on the network: this runs on Preview, which is the network Midnight's own team pointed builders
-              to while Preprod is mid-reset for mainnet prep. Same contract, same circuits, same frontend either
-              way, only the network target differs.
+              A note on the network: this runs on Preview. Midnight's own team pointed builders there while Preprod
+              is mid-reset for mainnet prep. Same contract, same circuits, same frontend either way, just a
+              different network target.
             </p>
           </div>
 
