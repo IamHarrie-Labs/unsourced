@@ -37,11 +37,11 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
           <span className="outline">SOURCED</span>
         </div>
         <div className="landing-hero-grid">
-          <div className="landing-hero-lede">Ask your group something. Everyone gets one answer, and even you can't tell who said what.</div>
+          <div className="landing-hero-lede">Some questions are easier to answer when nobody knows who said what.</div>
           <div className="landing-hero-actions">
             <div className="landing-hero-sub">
-              Every answer here comes from someone on your list, but nobody, not even whoever's running the
-              survey, can tell whose it was.
+              Every answer comes from someone you invited, but once it's sent there's no way to tell who picked
+              what. Not you. Not anyone.
             </div>
             <div className="landing-hero-buttons">
               <button className="btn btn-solid btn-display" onClick={onEnterApp}>
@@ -70,19 +70,25 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
             <div className="how-number">01</div>
             <div className="how-heading">Write the question</div>
             <div className="how-body">
-              Pick three options, decide how many people you're asking, and set how many answers you want in
-              before results show up.
+              Write your question, choose three possible answers, and decide how many people need to answer before
+              results appear.
             </div>
           </div>
           <div className="how-cell">
             <div className="how-number">02</div>
             <div className="how-heading">Hand out the keys</div>
-            <div className="how-body">Each person gets one key that only works once. The chain only ever sees a hash of it, never the key.</div>
+            <div className="how-body">
+              Everyone gets their own one-time access key. It isn't tied to their response, so nobody can work
+              backwards from the results to figure out who said what.
+            </div>
           </div>
           <div className="how-cell">
             <div className="how-number">03</div>
             <div className="how-heading">They answer once</div>
-            <div className="how-body">Their device proves the key is on your list, not which one it is. One tally goes up. That's all that gets written.</div>
+            <div className="how-body">
+              Each person can answer once. Their response gets added to the total with everyone else's. What you
+              see afterward is the count, not who picked what.
+            </div>
           </div>
         </div>
       </div>
@@ -111,15 +117,15 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
             </div>
           </div>
           <div className="ledger-note">
-            The threshold just controls what the app shows you. Tallies sit on the public ledger the whole time,
-            so anyone reading it directly could see them early. It's there so a few early answers can't be traced
-            back to specific people just by elimination.
+            If only a couple of people have answered, it's often easy to guess who they were. Waiting until enough
+            responses are in makes that guessing much harder, so people can answer honestly without worrying their
+            answer will stand out.
           </div>
         </div>
       </div>
 
       <div className="landing-cta">
-        <div className="landing-cta-title">Ask the thing nobody says out loud</div>
+        <div className="landing-cta-title">Ask the question nobody wants to answer in public</div>
         <button className="btn btn-solid btn-display" onClick={onEnterApp}>
           Connect wallet
         </button>
@@ -144,10 +150,10 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
 function StripItems({ hidden }: { hidden?: boolean }) {
   return (
     <div className="landing-strip-set" aria-hidden={hidden || undefined}>
-      <span>Up to 8 people per survey</span>
-      <span>One answer each</span>
-      <span>Results hidden until your threshold</span>
-      <span>No accounts, no emails</span>
+      <span>Invite up to 8 people</span>
+      <span>One response per person</span>
+      <span>Results stay locked until your threshold is met</span>
+      <span>No accounts, no email signups</span>
     </div>
   );
 }
