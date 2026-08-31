@@ -14,13 +14,14 @@ interface Props {
   onOpenDocs: () => void;
   initialSurveyAddress?: string;
   initialQuestions?: SurveyQuestion[];
+  initialTab?: Tab;
 }
 
 const DEFAULT_QUESTIONS: SurveyQuestion[] = [];
 
-export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, initialQuestions }: Props) {
+export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, initialQuestions, initialTab }: Props) {
   const survey = useSurveyContract(wallet, initialSurveyAddress);
-  const [tab, setTab] = useState<Tab>(initialSurveyAddress ? "answer" : "create");
+  const [tab, setTab] = useState<Tab>(initialTab ?? (initialSurveyAddress ? "answer" : "create"));
   const [questions, setQuestions] = useState<SurveyQuestion[]>(initialQuestions ?? DEFAULT_QUESTIONS);
   // Lives here, not inside CreateSurvey, so switching to another tab and
   // back doesn't lose the link and keys you just got, only "New survey"

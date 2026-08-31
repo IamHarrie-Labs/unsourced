@@ -404,8 +404,9 @@ export function encodeShareData(questions: SurveyQuestion[]): string {
     .replace(/=+$/, "");
 }
 
-export function buildShareLink(address: string, questions: SurveyQuestion[]): string {
+export function buildShareLink(address: string, questions: SurveyQuestion[], view?: "results"): string {
   const params = new URLSearchParams({ survey: address, data: encodeShareData(questions) });
+  if (view) params.set("view", view);
   return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 }
 

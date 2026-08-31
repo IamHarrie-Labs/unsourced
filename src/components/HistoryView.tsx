@@ -113,6 +113,7 @@ function CreatedRow({ record, state, connected }: { record: CreatedSurveyRecord;
 function AnsweredRow({ record }: { record: AnsweredSurveyRecord }) {
   const date = new Date(record.answeredAt).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
   const title = record.questions.length === 1 ? record.questions[0].text : `${record.questions[0].text} +${record.questions.length - 1} more`;
+  const link = buildShareLink(record.address, record.questions, "results");
   return (
     <div className="hist-row">
       <div>
@@ -123,6 +124,9 @@ function AnsweredRow({ record }: { record: AnsweredSurveyRecord }) {
       </div>
       <div className="hist-row-progress">Key spent</div>
       <div className="hist-row-progress">Your answer: not stored</div>
+      <button className="btn-ghost-yellow" style={{ justifySelf: "start" }} onClick={() => window.location.assign(link)}>
+        See results
+      </button>
     </div>
   );
 }

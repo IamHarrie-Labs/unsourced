@@ -12,6 +12,7 @@ const SURVEY_FROM_LINK = params.get("survey") ?? undefined;
 const QUESTIONS_FROM_LINK: SurveyQuestion[] | undefined = params.get("data")
   ? (decodeShareData(params.get("data")!) ?? undefined)
   : undefined;
+const INITIAL_TAB = params.get("view") === "results" ? "results" : undefined;
 
 function App() {
   const wallet = useWallet();
@@ -34,6 +35,7 @@ function App() {
         onOpenDocs={() => setPage("docs")}
         initialSurveyAddress={SURVEY_FROM_LINK}
         initialQuestions={QUESTIONS_FROM_LINK}
+        initialTab={INITIAL_TAB}
       />
     );
   }
