@@ -97,7 +97,11 @@ export function useWallet() {
   const [error, setError] = useState<string | null>(null);
   const [connectedApi, setConnectedApi] = useState<ConnectedAPI | null>(null);
 
-  const connect = useCallback(async () => {
+  // Returns whether the connection actually succeeded, since callers that
+  // gate access to the app (entering from the landing page, for instance)
+  // can't rely on reading `status` right after calling this: the state
+  // update from this closure hasn't reached their render yet.
+  const connect = useCallback(async (): Promise<boolean> => {
     setStatus("connecting");
     setError(null);
     try {
@@ -114,9 +118,11 @@ export function useWallet() {
       setConnectedApi(api);
       setAddress(unshieldedAddress);
       setStatus("connected");
+      return true;
     } catch (e) {
       setStatus("error");
       setError(e instanceof Error ? e.message : "Failed to connect to wallet");
+      return false;
     }
   }, []);
 

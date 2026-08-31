@@ -18,8 +18,8 @@ function App() {
   const [page, setPage] = useState<Page>(SURVEY_FROM_LINK ? "app" : "landing");
 
   async function enterApp() {
-    if (wallet.status !== "connected") await wallet.connect();
-    setPage("app");
+    const connected = wallet.status === "connected" || (await wallet.connect());
+    if (connected) setPage("app");
   }
 
   if (page === "docs") {
@@ -38,7 +38,7 @@ function App() {
     );
   }
 
-  return <Landing onEnterApp={enterApp} onOpenDocs={() => setPage("docs")} />;
+  return <Landing wallet={wallet} onEnterApp={enterApp} onOpenDocs={() => setPage("docs")} />;
 }
 
 export default App;

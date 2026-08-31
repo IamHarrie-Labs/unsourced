@@ -466,6 +466,15 @@ button {
   max-width: 240px;
 }
 
+.landing-error {
+  color: #7a1f1f;
+  font-size: 13px;
+  font-family: "IBM Plex Mono", monospace;
+  max-width: 46ch;
+  border-left: 2px solid #7a1f1f;
+  padding-left: 10px;
+}
+
 .app-tabs {
   display: flex;
   gap: 0;

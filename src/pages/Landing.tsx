@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import type { Wallet } from "../hooks/useSurvey";
 
 interface Props {
+  wallet: Wallet;
   onEnterApp: () => void;
   onOpenDocs: () => void;
 }
 
-export function Landing({ onEnterApp, onOpenDocs }: Props) {
+export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
   const [navVisible, setNavVisible] = useState(false);
+  const connecting = wallet.status === "connecting";
+  const connectLabel = connecting ? "Connecting…" : "Connect wallet";
 
   useEffect(() => {
     function onScroll() {
@@ -25,8 +29,8 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
           <a href="#docs" onClick={onOpenDocs}>
             Docs
           </a>
-          <button className="btn btn-solid" onClick={onEnterApp}>
-            Connect wallet
+          <button className="btn btn-solid" onClick={onEnterApp} disabled={connecting}>
+            {connectLabel}
           </button>
         </div>
       </div>
@@ -44,13 +48,20 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
               what. Not you. Not anyone.
             </div>
             <div className="landing-hero-buttons">
-              <button className="btn btn-solid btn-display" onClick={onEnterApp}>
-                Create a survey
+              <button className="btn btn-solid btn-display" onClick={onEnterApp} disabled={connecting}>
+                {connecting ? "Connecting…" : "Create a survey"}
               </button>
               <button className="btn btn-outline btn-display" onClick={onOpenDocs}>
                 Read the docs
               </button>
             </div>
+            {wallet.status === "error" && wallet.error && (
+              <p className="landing-error">
+                {wallet.error.includes("No Midnight wallet found")
+                  ? "Couldn't find a wallet. Install the Lace extension and unlock it, then try again."
+                  : wallet.error}
+              </p>
+            )}
             <div className="landing-hero-tag">Midnight network · Preview · Lace wallet</div>
           </div>
         </div>
@@ -126,8 +137,8 @@ export function Landing({ onEnterApp, onOpenDocs }: Props) {
 
       <div className="landing-cta">
         <div className="landing-cta-title">Ask the question nobody wants to answer in public</div>
-        <button className="btn btn-solid btn-display" onClick={onEnterApp}>
-          Connect wallet
+        <button className="btn btn-solid btn-display" onClick={onEnterApp} disabled={connecting}>
+          {connectLabel}
         </button>
       </div>
 
