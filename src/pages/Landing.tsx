@@ -151,6 +151,9 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
           <a href="/docs" onClick={(e) => { e.preventDefault(); onOpenDocs(); }}>
             Privacy model
           </a>
+          <a href="https://x.com/tryunsourced" target="_blank" rel="noreferrer">
+            @tryunsourced
+          </a>
           <span style={{ opacity: 0.6 }}>Preview network</span>
         </div>
       </div>

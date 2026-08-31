@@ -133,11 +133,9 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               the same way.
             </p>
             <p className="docs-p" style={{ marginTop: 14 }}>
-              A note on the network: the live demo runs against Preview instead of Preprod. Preprod's own
-              RPC/indexer has been down every time I've checked over several weeks: every deploy attempt hangs
-              indefinitely at wallet sync. Midnight's own forum confirms Preprod is mid-reset for mainnet prep and
-              "intermittently unavailable during testing." Preview is fully functional and this is the same
-              contract, same circuits, same frontend, only the network target differs.
+              A note on the network: this runs on Preview, which is the network Midnight's own team pointed builders
+              to while Preprod is mid-reset for mainnet prep. Same contract, same circuits, same frontend either
+              way, only the network target differs.
             </p>
           </div>
 
@@ -176,9 +174,10 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
             <div className="docs-heading">Tests and CI</div>
             <div className="docs-code">{"npm test\nnpm run test:verbose"}</div>
             <p className="docs-p">
-              10 tests split into circuit logic, state transitions, and privacy: a committed member can respond
-              once; a non-member is rejected; a second response from the same member is rejected; tallies match the
-              chosen option; no raw member key ever appears in ledger state.
+              12 tests split into circuit logic, state transitions, and privacy: a committed member can respond
+              once, across every question in one submission; a non-member is rejected; a second response from the
+              same member is rejected; tallies match the chosen options; question slots beyond a survey's real
+              question count are ignored; no raw member key ever appears in ledger state.
             </p>
             <p className="docs-p">
               Every push and pull request to main runs <span className="mono">.github/workflows/ci.yml</span>,
@@ -205,6 +204,9 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
         <div className="docs-footer">
           <a href="/" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
             ← Back to home
+          </a>
+          <a href="https://x.com/tryunsourced" target="_blank" rel="noreferrer">
+            @tryunsourced on X
           </a>
           <button onClick={onOpenApp}>Open the app →</button>
         </div>

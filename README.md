@@ -4,6 +4,8 @@
 
 > A survey where every response is provably from an eligible member, and nobody, including whoever ran it, can tell which one.
 
+[@tryunsourced on X](https://x.com/tryunsourced)
+
 ## Live Demo
 
 https://unsourced.vercel.app
@@ -18,7 +20,7 @@ Connect Lace (set to the Preview network) and click "Create survey" to start you
 
 That's the address of the demo survey linked above; every survey created through the app gets its own fresh address the same way.
 
-**A note on the network:** the live demo runs against Preview instead of Preprod. Preprod's own RPC/indexer has been down every time I've checked over several weeks, every deploy attempt hangs indefinitely at wallet sync. Midnight's own forum confirms Preprod is mid-reset for mainnet prep and "intermittently unavailable during testing." Preview is fully functional and this is the same contract, same circuits, same frontend, only the network target differs.
+**A note on the network:** this runs on Preview, which is the network Midnight's own team pointed builders to while Preprod is mid-reset for mainnet prep. Same contract, same circuits, same frontend either way, only the network target differs.
 
 ## What this does
 
