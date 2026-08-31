@@ -121,7 +121,7 @@ Generates 8 fresh member keys, deploys with their commitments baked in, and writ
 
 ## Demo video
 
-Coming shortly.
+https://drive.google.com/file/d/1PdFnSlX4e8ZfXyfiCOi-aoBk6w07F-qF/view?usp=sharing
 
 ## Screenshots
 
