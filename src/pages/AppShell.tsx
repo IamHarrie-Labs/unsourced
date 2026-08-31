@@ -92,6 +92,13 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
         {tab === "results" && <ResultsView wallet={wallet} survey={survey} questions={questions} />}
         {tab === "history" && <HistoryView wallet={wallet} />}
       </div>
+
+      <div className="app-footer">
+        <span>Unsourced</span>
+        <a href="https://x.com/tryunsourced" target="_blank" rel="noreferrer">
+          X
+        </a>
+      </div>
     </div>
   );
 }

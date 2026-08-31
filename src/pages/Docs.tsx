@@ -32,8 +32,7 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
               including you, can see who picked what.
             </p>
             <p className="docs-p">
-              The point isn't hiding from a stranger, it's hiding from whoever's actually going to read the
-              results.
+              A stranger was never who you needed protecting from. Whoever's actually going to read the results is.
             </p>
           </div>
 
@@ -208,7 +207,7 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
             ← Back to home
           </a>
           <a href="https://x.com/tryunsourced" target="_blank" rel="noreferrer">
-            @tryunsourced on X
+            X
           </a>
           <button onClick={onOpenApp}>Open the app →</button>
         </div>

@@ -152,7 +152,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
             Privacy model
           </a>
           <a href="https://x.com/tryunsourced" target="_blank" rel="noreferrer">
-            @tryunsourced
+            X
           </a>
           <span style={{ opacity: 0.6 }}>Preview network</span>
         </div>
