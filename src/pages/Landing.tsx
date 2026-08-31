@@ -26,7 +26,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
         <div className="landing-logo">Unsourced</div>
         <div className="landing-nav-links">
           <a href="#how">How it works</a>
-          <a href="#docs" onClick={onOpenDocs}>
+          <a href="/docs" onClick={(e) => { e.preventDefault(); onOpenDocs(); }}>
             Docs
           </a>
           <button className="btn btn-solid" onClick={onEnterApp} disabled={connecting}>
@@ -145,10 +145,10 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
       <div className="landing-footer">
         <span>Unsourced</span>
         <div className="landing-footer-links">
-          <a href="#docs" onClick={onOpenDocs}>
+          <a href="/docs" onClick={(e) => { e.preventDefault(); onOpenDocs(); }}>
             Docs
           </a>
-          <a href="#docs" onClick={onOpenDocs}>
+          <a href="/docs" onClick={(e) => { e.preventDefault(); onOpenDocs(); }}>
             Privacy model
           </a>
           <span style={{ opacity: 0.6 }}>Preview network</span>

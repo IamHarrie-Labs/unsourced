@@ -48,11 +48,11 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
   return (
     <div className="app-shell">
       <div className="app-nav">
-        <a href="#home" onClick={onGoHome} className="app-logo">
+        <a href="/" onClick={(e) => { e.preventDefault(); onGoHome(); }} className="app-logo">
           Unsourced
         </a>
         <div className="app-nav-right">
-          <a href="#docs" onClick={onOpenDocs} className="app-docs-link">
+          <a href="/docs" onClick={(e) => { e.preventDefault(); onOpenDocs(); }} className="app-docs-link">
             Docs
           </a>
           <WalletConnect {...wallet} />

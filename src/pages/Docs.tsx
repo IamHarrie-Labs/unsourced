@@ -7,7 +7,7 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
   return (
     <div className="docs">
       <div className="landing-nav">
-        <a href="#home" onClick={onGoHome} className="landing-logo">
+        <a href="/" onClick={(e) => { e.preventDefault(); onGoHome(); }} className="landing-logo">
           Unsourced
         </a>
         <div className="landing-nav-links" style={{ fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.1em" }}>
@@ -203,7 +203,7 @@ export function Docs({ onOpenApp, onGoHome }: Props) {
         </div>
 
         <div className="docs-footer">
-          <a href="#home" onClick={onGoHome}>
+          <a href="/" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
             ← Back to home
           </a>
           <button onClick={onOpenApp}>Open the app →</button>
