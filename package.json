@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "compact": "compact compile contracts/survey.compact managed/survey",
+    "compact": "compact compile contracts/survey.compact managed/survey && rm -rf public/keys public/zkir && cp -r managed/survey/keys public/keys && cp -r managed/survey/zkir public/zkir",
     "test": "vitest run",
     "test:verbose": "vitest run --reporter=verbose",
     "test:compile": "npm run compact && vitest run",
