@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Wallet } from "../hooks/useSurvey";
-import { getCreatedHistory, getAnsweredHistory, readSurveyLedger, type CreatedSurveyRecord, type AnsweredSurveyRecord } from "../hooks/useSurvey";
+import { getCreatedHistory, getAnsweredHistory, readSurveyLedger, buildShareLink, type CreatedSurveyRecord, type AnsweredSurveyRecord } from "../hooks/useSurvey";
 
 interface Props {
   wallet: Wallet;
@@ -87,6 +87,8 @@ function CreatedRow({ record, state, connected }: { record: CreatedSurveyRecord;
     stateClass = state.revealed ? "hist-row-state--yellow" : "hist-row-state--dim";
   }
   const title = record.questions.length === 1 ? record.questions[0].text : `${record.questions[0].text} +${record.questions.length - 1} more`;
+  const [copied, setCopied] = useState(false);
+  const link = buildShareLink(record.address, record.questions);
   return (
     <div className="hist-row">
       <div>
@@ -97,6 +99,13 @@ function CreatedRow({ record, state, connected }: { record: CreatedSurveyRecord;
       </div>
       <div className="hist-row-progress">{progress}</div>
       <div className={`hist-row-state ${stateClass}`}>{stateLabel}</div>
+      <button
+        className="btn-ghost-yellow"
+        style={{ justifySelf: "start" }}
+        onClick={() => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600); })}
+      >
+        {copied ? "Copied" : "Copy link"}
+      </button>
     </div>
   );
 }

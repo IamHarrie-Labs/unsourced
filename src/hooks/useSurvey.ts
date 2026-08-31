@@ -398,6 +398,11 @@ export function encodeShareData(questions: SurveyQuestion[]): string {
     .replace(/=+$/, "");
 }
 
+export function buildShareLink(address: string, questions: SurveyQuestion[]): string {
+  const params = new URLSearchParams({ survey: address, data: encodeShareData(questions) });
+  return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+}
+
 export function decodeShareData(encoded: string): SurveyQuestion[] | null {
   try {
     const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");

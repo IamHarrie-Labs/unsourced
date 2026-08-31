@@ -1,12 +1,6 @@
 import { useState } from "react";
 import type { Wallet, SurveyQuestion } from "../hooks/useSurvey";
-import { useSurveyContract, recordCreatedSurvey, encodeShareData, MAX_QUESTIONS } from "../hooks/useSurvey";
-
-interface Props {
-  wallet: Wallet;
-  survey: ReturnType<typeof useSurveyContract>;
-  onDeployed: (args: { address: string; questions: SurveyQuestion[] }) => void;
-}
+import { useSurveyContract, recordCreatedSurvey, buildShareLink, MAX_QUESTIONS } from "../hooks/useSurvey";
 
 interface DoneState {
   address: string;
@@ -14,17 +8,25 @@ interface DoneState {
   memberKeys: string[];
 }
 
+interface Props {
+  wallet: Wallet;
+  survey: ReturnType<typeof useSurveyContract>;
+  justCreated: DoneState | null;
+  onCreated: (created: DoneState) => void;
+  onReset: () => void;
+  onViewResults: (args: { address: string; questions: SurveyQuestion[] }) => void;
+}
+
 function emptyQuestion(): SurveyQuestion {
   return { text: "", options: ["", "", ""] };
 }
 
-export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
+export function CreateSurvey({ wallet, survey, justCreated: done, onCreated, onReset, onViewResults }: Props) {
   const { deploying, error, createSurvey } = survey;
   const [questions, setQuestions] = useState<SurveyQuestion[]>([emptyQuestion()]);
   const [people, setPeople] = useState(5);
   const [threshold, setThreshold] = useState(3);
   const [stage, setStage] = useState<"deploy" | "hashing" | "deploying">("deploy");
-  const [done, setDone] = useState<DoneState | null>(null);
   const [copied, setCopied] = useState(false);
 
   const questionsFilled = questions.every((q) => q.text.trim() && q.options.every((o) => o.trim()));
@@ -55,7 +57,7 @@ export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
     const outcome = await createSurvey(people, trimmedQuestions.length, threshold);
     if (outcome) {
       const record = { address: outcome.contractAddress, questions: trimmedQuestions, memberKeys: outcome.memberKeys };
-      setDone(record);
+      onCreated(record);
       recordCreatedSurvey({
         address: record.address,
         questions: record.questions,
@@ -63,21 +65,12 @@ export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
         threshold,
         createdAt: new Date().toISOString(),
       });
-      onDeployed({ address: record.address, questions: record.questions });
     }
     setStage("deploy");
   }
 
-  function shareLink(record: DoneState): string {
-    const params = new URLSearchParams({
-      survey: record.address,
-      data: encodeShareData(record.questions),
-    });
-    return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-  }
-
   function resetCreate() {
-    setDone(null);
+    onReset();
     setQuestions([emptyQuestion()]);
     setCopied(false);
   }
@@ -95,13 +88,13 @@ export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
   }
 
   if (done) {
-    const link = shareLink(done);
+    const link = buildShareLink(done.address, done.questions);
     return (
       <div>
         <div className="page-title">Survey is live</div>
         <div className="page-sub" style={{ maxWidth: "62ch" }}>
-          Send each person the link plus one key. Each key works once. Keys are shown here only now, the app
-          cannot recover them later.
+          Send each person the link plus one key. Each key works once. The link is safe to find again later, from
+          History, but the keys below only stay on screen for this session, so copy them out now.
         </div>
 
         <div className="panel-box">
@@ -125,7 +118,7 @@ export function CreateSurvey({ wallet, survey, onDeployed }: Props) {
         </div>
 
         <div className="action-row">
-          <button className="btn-yellow" onClick={() => onDeployed({ address: done.address, questions: done.questions })}>
+          <button className="btn-yellow" onClick={() => onViewResults({ address: done.address, questions: done.questions })}>
             See results
           </button>
           <button className="btn-outline-dark" onClick={resetCreate}>

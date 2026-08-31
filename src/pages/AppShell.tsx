@@ -22,6 +22,10 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
   const survey = useSurveyContract(wallet, initialSurveyAddress);
   const [tab, setTab] = useState<Tab>(initialSurveyAddress ? "answer" : "create");
   const [questions, setQuestions] = useState<SurveyQuestion[]>(initialQuestions ?? DEFAULT_QUESTIONS);
+  // Lives here, not inside CreateSurvey, so switching to another tab and
+  // back doesn't lose the link and keys you just got, only "New survey"
+  // (an explicit choice) clears it.
+  const [justCreated, setJustCreated] = useState<{ address: string; questions: SurveyQuestion[]; memberKeys: string[] } | null>(null);
 
   // Disconnecting mid-session should drop you back to the landing page,
   // not leave you staring at a dashboard with no wallet behind it. Only
@@ -74,7 +78,10 @@ export function AppShell({ wallet, onGoHome, onOpenDocs, initialSurveyAddress, i
           <CreateSurvey
             wallet={wallet}
             survey={survey}
-            onDeployed={(deployed) => {
+            justCreated={justCreated}
+            onCreated={(created) => setJustCreated(created)}
+            onReset={() => setJustCreated(null)}
+            onViewResults={(deployed) => {
               setQuestions(deployed.questions);
               setTab("results");
             }}
