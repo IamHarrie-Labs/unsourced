@@ -8,9 +8,9 @@
 
 ## Live Demo
 
-https://unsourced.vercel.app
+https://unsourced.xyz
 
-Connect Lace (set to the Preview network) and click "Create survey" to start your own: no CLI, no setup file, just a form and a button. You'll get a shareable link and a set of one-time access keys, one per person you're asking. Send the link plus one key to each person; they open the link, paste their key, and answer each question. Try responding yourself with [this pre-made demo survey](https://unsourced.vercel.app/app?survey=9c4e3b4be9bd1b997f44bdbd5ba4af6df58c8e82a717a99102b5081e0c36841c&data=eyJxdWVzdGlvbnMiOlt7InRleHQiOiJIb3cncyB0aGlzIGN5Y2xlIGdvaW5nPyIsIm9wdGlvbnMiOlsiR29pbmcgd2VsbCIsIk1peGVkIiwiTmVlZHMgd29yayJdfV19) if you just want to see the respond side without creating one.
+Connect Lace (set to the Preview network) and click "Create survey" to start your own: no CLI, no setup file, just a form and a button. You'll get a shareable link and a set of one-time access keys, one per person you're asking. Send the link plus one key to each person; they open the link, paste their key, and answer each question. Try responding yourself with [this pre-made demo survey](https://unsourced.xyz/app?survey=9c4e3b4be9bd1b997f44bdbd5ba4af6df58c8e82a717a99102b5081e0c36841c&data=eyJxdWVzdGlvbnMiOlt7InRleHQiOiJIb3cncyB0aGlzIGN5Y2xlIGdvaW5nPyIsIm9wdGlvbnMiOlsiR29pbmcgd2VsbCIsIk1peGVkIiwiTmVlZHMgd29yayJdfV19) if you just want to see the respond side without creating one.
 
 ## Contract address
 
