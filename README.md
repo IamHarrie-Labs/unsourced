@@ -125,4 +125,10 @@ Coming shortly.
 
 ## Screenshots
 
-Coming shortly.
+The landing page:
+
+![Landing page](screenshots/landing.png)
+
+The docs page:
+
+![Docs page](screenshots/docs.png)
