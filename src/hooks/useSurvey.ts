@@ -14,6 +14,7 @@ import { CompiledContract } from "@midnight-ntwrk/midnight-js-protocol/compact-j
 import { fromHex, toHex, persistentHash, CompactTypeBytes, CompactTypeVector } from "@midnight-ntwrk/midnight-js-protocol/compact-runtime";
 import { Binding, Proof, SignatureEnabled, Transaction } from "@midnight-ntwrk/midnight-js-protocol/ledger";
 import satisfies from "semver/functions/satisfies.js";
+import { track } from "@vercel/analytics";
 
 import * as SurveyContract from "../../managed/survey/contract/index.js";
 import { inMemoryPrivateStateProvider } from "../in-memory-private-state-provider";
@@ -267,6 +268,9 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
         setLastResult(`Sent. Transaction id: ${tx.public.txId}`);
         localStorage.setItem(respondedStorageKey(contractAddress), "true");
         setHasResponded(true);
+        // Just a count, never the address or anything that could be tied
+        // back to which survey or who answered it.
+        track("Survey answered");
       } catch (e) {
         const raw = e instanceof Error ? e.message : `Failed to send your answer`;
         setError(humanizeError(raw));
@@ -312,6 +316,9 @@ export function useSurveyContract(wallet: Wallet, initialContractAddress?: strin
 
         const newAddress = deployed.deployTxData.public.contractAddress;
         setContractAddress(newAddress);
+        // Same here: how many people and questions, never the address or
+        // anything that could identify the survey or its creator.
+        track("Survey created", { memberCount, questionCount });
         return { contractAddress: newAddress, memberKeys: realKeys.map(toHex) };
       } catch (e) {
         const raw = e instanceof Error ? e.message : "Failed to create the survey";
