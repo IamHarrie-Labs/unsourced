@@ -146,9 +146,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
 // A vertical scroll through this section drives a horizontal slide: the
 // wrapper is tall enough to hold the whole scroll range, an inner sticky
 // pane stays pinned to the viewport while that range plays out, and the
-// card row translates sideways in step with it. Cards overlap with a
-// negative margin so each new one slides out from behind the last,
-// stacking as it goes rather than just sitting in a row.
+// card row translates sideways in step with it.
 function LedgerStack() {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);

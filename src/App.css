@@ -327,31 +327,31 @@ button {
 .ledger-stack-sticky {
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: min(100vh, 700px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  padding: clamp(24px, 4vw, 48px) 0;
+  padding: clamp(48px, 7vw, 88px) 0 clamp(32px, 5vw, 56px);
 }
 
 .ledger-stack-sticky .section-title {
   padding: 0 clamp(16px, 5vw, 56px);
-  margin-bottom: clamp(28px, 4vw, 48px);
+  margin-bottom: clamp(36px, 5vw, 56px);
 }
 
 .ledger-track {
   display: flex;
+  gap: 28px;
   padding-left: clamp(16px, 5vw, 56px);
   will-change: transform;
 }
 
 .ledger-stack-card {
   flex: 0 0 auto;
-  width: min(460px, 78vw);
-  min-height: 280px;
-  margin-left: -64px;
-  padding: 36px 32px;
+  width: min(560px, 82vw);
+  min-height: 420px;
+  padding: 44px 40px;
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   background: #141414;
@@ -359,11 +359,7 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 20px;
-}
-
-.ledger-stack-card:first-child {
-  margin-left: 0;
+  gap: 24px;
 }
 
 .ledger-stack-tag {
@@ -387,7 +383,7 @@ button {
 }
 
 .ledger-stack-text {
-  font-size: clamp(19px, 2.2vw, 24px);
+  font-size: clamp(21px, 2.4vw, 27px);
   line-height: 1.4;
   color: var(--cream);
 }
