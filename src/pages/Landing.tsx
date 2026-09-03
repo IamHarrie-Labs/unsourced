@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Wallet } from "../hooks/useSurvey";
+
+const LEDGER_ITEMS: { group: "Public" | "Never leaves the device"; text: string }[] = [
+  { group: "Public", text: "The eight key hashes, written once when the survey is made." },
+  { group: "Public", text: "How many people have answered, and the tally for each question." },
+  { group: "Public", text: "That someone on the list answered, and which tally went up." },
+  { group: "Never leaves the device", text: "Anyone's key. It is read only inside a proof made on their own machine." },
+  { group: "Never leaves the device", text: "Which of the eight people sent any given answer." },
+  { group: "Never leaves the device", text: "Any link between a person and the answer they picked. The two are never stored together." },
+];
 
 interface Props {
   wallet: Wallet;
@@ -105,34 +114,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
       </div>
 
       <div className="ledger-section">
-        <div className="ledger-section-inner">
-          <div className="section-title">What the ledger sees</div>
-          <div className="ledger-grid">
-            <div>
-              <div className="ledger-col-title">Public</div>
-              <div className="ledger-cards">
-                <div className="ledger-item">The eight key hashes, written once when the survey is made.</div>
-                <div className="ledger-item">How many people have answered, and the tally for each question.</div>
-                <div className="ledger-item">That someone on the list answered, and which tally went up.</div>
-              </div>
-            </div>
-            <div>
-              <div className="ledger-col-title">Never leaves the device</div>
-              <div className="ledger-cards">
-                <div className="ledger-item">Anyone's key. It is read only inside a proof made on their own machine.</div>
-                <div className="ledger-item">Which of the eight people sent any given answer.</div>
-                <div className="ledger-item">
-                  Any link between a person and the answer they picked. The two are never stored together.
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="ledger-note">
-            If only a couple of people have answered, it's often easy to guess who they were. Waiting until enough
-            responses are in makes that guessing much harder, so people can answer honestly without worrying their
-            answer will stand out.
-          </div>
-        </div>
+        <LedgerStack />
       </div>
 
       <div className="landing-cta">
@@ -155,6 +137,61 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
             X
           </a>
           <span style={{ opacity: 0.6 }}>Preview network</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// A vertical scroll through this section drives a horizontal slide: the
+// wrapper is tall enough to hold the whole scroll range, an inner sticky
+// pane stays pinned to the viewport while that range plays out, and the
+// card row translates sideways in step with it. Cards overlap with a
+// negative margin so each new one slides out from behind the last,
+// stacking as it goes rather than just sitting in a row.
+function LedgerStack() {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [maxShift, setMaxShift] = useState(0);
+  const [shift, setShift] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      if (!trackRef.current) return;
+      const overshoot = trackRef.current.scrollWidth - window.innerWidth;
+      setMaxShift(Math.max(0, overshoot + 64));
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    function onScroll() {
+      const wrapper = wrapperRef.current;
+      if (!wrapper || maxShift === 0) return;
+      const rect = wrapper.getBoundingClientRect();
+      const progress = Math.min(1, Math.max(0, -rect.top / maxShift));
+      setShift(progress * maxShift);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [maxShift]);
+
+  return (
+    <div className="ledger-stack-wrapper" ref={wrapperRef} style={{ height: `calc(100vh + ${maxShift}px)` }}>
+      <div className="ledger-stack-sticky">
+        <div className="section-title">What the ledger sees</div>
+        <div className="ledger-track" ref={trackRef} style={{ transform: `translateX(-${shift}px)` }}>
+          {LEDGER_ITEMS.map((item, i) => (
+            <div className="ledger-stack-card" key={i} style={{ zIndex: i + 1 }}>
+              <div className={item.group === "Public" ? "ledger-stack-tag ledger-stack-tag--public" : "ledger-stack-tag ledger-stack-tag--device"}>
+                {item.group}
+              </div>
+              <div className="ledger-stack-text">{item.text}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -313,74 +313,83 @@ button {
 .ledger-section {
   background: var(--ink);
   color: var(--cream);
-  padding: clamp(48px, 7vw, 96px) clamp(16px, 5vw, 56px);
+  position: relative;
 }
 
 .ledger-section .section-title {
   color: var(--yellow);
 }
 
-.ledger-section-inner {
-  max-width: 1400px;
-  margin: 0 auto;
+.ledger-stack-wrapper {
+  position: relative;
 }
 
-.ledger-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: clamp(28px, 5vw, 72px);
+.ledger-stack-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding: clamp(24px, 4vw, 48px) 0;
 }
 
-.ledger-col-title {
+.ledger-stack-sticky .section-title {
+  padding: 0 clamp(16px, 5vw, 56px);
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+.ledger-track {
+  display: flex;
+  padding-left: clamp(16px, 5vw, 56px);
+  will-change: transform;
+}
+
+.ledger-stack-card {
+  flex: 0 0 auto;
+  width: min(460px, 78vw);
+  min-height: 280px;
+  margin-left: -64px;
+  padding: 36px 32px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: #141414;
+  box-shadow: 0 28px 52px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+.ledger-stack-card:first-child {
+  margin-left: 0;
+}
+
+.ledger-stack-tag {
   font-family: "IBM Plex Mono", monospace;
   font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--yellow);
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--line-soft);
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
 }
 
-.ledger-cards {
-  display: flex;
-  flex-direction: column;
+.ledger-stack-tag--public {
+  color: var(--ink);
+  background: var(--yellow);
 }
 
-.ledger-item {
-  font-size: 16px;
-  line-height: 1.55;
-  padding: 18px 20px;
+.ledger-stack-tag--device {
+  color: var(--cream);
   border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  background: #141414;
-  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.5);
-  position: sticky;
 }
 
-.ledger-cards .ledger-item:nth-child(1) {
-  top: 88px;
-  z-index: 1;
-}
-
-.ledger-cards .ledger-item:nth-child(2) {
-  top: 128px;
-  z-index: 2;
-  margin-top: 16px;
-}
-
-.ledger-cards .ledger-item:nth-child(3) {
-  top: 168px;
-  z-index: 3;
-  margin-top: 16px;
-}
-
-.ledger-note {
-  margin-top: clamp(28px, 4vw, 44px);
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--dim);
-  max-width: 70ch;
-  text-wrap: pretty;
+.ledger-stack-text {
+  font-size: clamp(19px, 2.2vw, 24px);
+  line-height: 1.4;
+  color: var(--cream);
 }
 
 .landing-cta {
