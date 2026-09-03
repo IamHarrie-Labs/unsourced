@@ -110,7 +110,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
           <div className="ledger-grid">
             <div>
               <div className="ledger-col-title">Public</div>
-              <div>
+              <div className="ledger-cards">
                 <div className="ledger-item">The eight key hashes, written once when the survey is made.</div>
                 <div className="ledger-item">How many people have answered, and the tally for each question.</div>
                 <div className="ledger-item">That someone on the list answered, and which tally went up.</div>
@@ -118,7 +118,7 @@ export function Landing({ wallet, onEnterApp, onOpenDocs }: Props) {
             </div>
             <div>
               <div className="ledger-col-title">Never leaves the device</div>
-              <div>
+              <div className="ledger-cards">
                 <div className="ledger-item">Anyone's key. It is read only inside a proof made on their own machine.</div>
                 <div className="ledger-item">Which of the eight people sent any given answer.</div>
                 <div className="ledger-item">
