@@ -2,6 +2,7 @@
   "name": "unsourced",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "compact": "compact compile contracts/survey.compact managed/survey && rm -rf public/keys public/zkir && cp -r managed/survey/keys public/keys && cp -r managed/survey/zkir public/zkir",
